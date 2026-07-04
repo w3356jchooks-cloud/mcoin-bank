@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mcoin Central Bank</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; text-align: center; padding: 40px; color: #333; }
+        .bank-vault { max-width: 500px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h1 { color: #4C80F1; font-size: 32px; }
+        .balance-display { font-size: 48px; font-weight: bold; color: #2ecc71; margin: 20px 0; }
+        .file-upload-zone { border: 3px dashed #4C80F1; padding: 30px; border-radius: 15px; background: #f9f9ff; cursor: pointer; margin-top: 20px; }
+        .file-upload-zone:hover { background: #f0f4ff; }
+        input[type="file"] { display: none; }
+        .log-box { font-family: monospace; background: #eee; padding: 10px; border-radius: 5px; font-size: 12px; margin-top: 15px; text-align: left; word-break: break-all; max-height: 100px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="bank-vault">
+        <h1>Mcoin Central Bank 🏦</h1>
+        <p>Upload your <code>Mlog.txt</code> file below to claim your farmed earnings.</p>
+        
+        <div class="balance-display"><span id="totalBalance">0.00</span> M</div>
+        <p style="color:#777; margin-top:-10px;">Your Current Balance</p>
+
+        <label class="file-upload-zone">
+            <span>📁 Tap to Upload Mlog.txt</span>
+            <input type="file" id="fileInput" accept=".txt" onchange="processMlog(this)">
+        </label>
+
+        <div id="statusMessage" style="margin-top: 15px; font-weight: bold;"></div>
+        <div id="rawLog" class="log-box" style="display: none;"></div>
+    </div>
+
+    <script>
+        let currentWalletBalance = 0.00;
+
+        function processMlog(input) {
+            let file = input.files[0];
+            if (!file) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let encryptedText = e.target.result.trim();
+                document.getElementById('rawLog').style.display = "block";
+                document.getElementById('rawLog').innerText = "Encrypted Data Stream: " + encryptedText;
+
+                try {
+                    // Unpack and decrypt the Base64 log
+                    let decryptedText = atob(encryptedText);
+                    let logData = JSON.parse(decryptedText);
+
+                    // Anti-cheat verification rule
+                    let expectedHash = btoa(`Mcoin-${logData.runtimeSeconds}-${logData.timestamp}`);
+                    
+                    if (logData.currency !== "Mcoin" || logData.verificationHash !== expectedHash) {
+                        throw new Error("Tampering detected!");
+                    }
+
+                    // Process legitimate block math (5 coins per hour)
+                    let totalSeconds = logData.runtimeSeconds;
+                    let earnedCoins = totalSeconds * (5 / 3600);
+
+                    // Credit the bank balance
+                    currentWalletBalance += earnedCoins;
+                    document.getElementById('totalBalance').innerText = currentWalletBalance.toFixed(2);
+                    
+                    document.getElementById('statusMessage').innerText = `✅ Deposit Successful! +${earnedCoins.toFixed(2)} Mcoins credited.`;
+                    document.getElementById('statusMessage').style.color = "#2ecc71";
+
+                } catch (err) {
+                    document.getElementById('statusMessage').innerText = "❌ ERROR: Invalid or corrupted Mlog file!";
+                    document.getElementById('statusMessage').style.color = "#e74c3c";
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
+
