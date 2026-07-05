@@ -10,46 +10,53 @@
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 20px; text-align: center; }
         h1, h2 { color: #4C80F1; margin-top: 0; }
         .balance-display { font-size: 46px; font-weight: bold; color: #2ecc71; margin: 10px 0; }
-        .upload-zone { border: 2px dashed #4C80F1; padding: 20px; border-radius: 12px; cursor: pointer; background: #f9f9ff; transition: 0.2s; position: relative; }
+        .upload-zone { border: 2px dashed #4C80F1; padding: 20px; border-radius: 12px; cursor: pointer; background: #f9f9ff; transition: 0.2s; }
         .upload-zone:hover { background: #f0f3ff; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        textarea { resize: none; font-family: monospace; background: #fafafa; }
         button { width: 100%; background: #4C80F1; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         button:hover { background: #3566d4; }
-        .status { margin-top: 12px; font-weight: bold; font-size: 14px; }
+        .status { margin-top: 12px; font-weight: bold; font-size: 14px; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- WALLET VAULT CARD -->
+        <!-- WALLET VAULT -->
         <div class="card">
             <h1>Mcoin Central Bank 🏦</h1>
             <div class="balance-display"><span id="walletBalance">1.67</span> M</div>
             <p style="color:#777; margin-top:-10px; font-size:14px; margin-bottom: 20px;">Your Current Bank Balance</p>
             
-            <!-- Deposit Section -->
             <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                <p style="margin: 0; font-weight: 500; color: #4C80F1;">📁 Tap to Upload Mlog.txt</p>
+                <p style="margin: 0; font-weight: 500; color: #4C80F1;">📁 Tap to Upload Mlog.txt (Deposit Farmed Coins)</p>
                 <input type="file" id="fileInput" accept=".txt" style="display:none;" onchange="processDeposit(this)">
             </div>
             <div id="depositStatus" class="status"></div>
         </div>
 
-        <!-- TRANSACTION PORTAL CARD -->
+        <!-- TRANSACTION SEND PORTAL -->
         <div class="card">
-            <h2>Send Mcoins 💳</h2>
-            <p style="color:#666; font-size:13px; margin-top:-8px;">Transfer currency instantly to another user</p>
+            <h2>Send Mcoins 💸</h2>
+            <p style="color:#666; font-size:13px; margin-top:-8px;">Deduct coins from your wallet to generate a transfer code</p>
             
-            <input type="text" id="recipientName" placeholder="Enter Recipient's Name / Wallet ID">
             <input type="number" id="transferAmount" step="0.01" min="0.01" placeholder="Amount to send (M)">
-            
-            <button onclick="executeTransaction()">Confirm & Send Transfer</button>
+            <button onclick="generateTransferCode()">Generate Transfer Code</button>
             <div id="txStatus" class="status"></div>
+        </div>
+
+        <!-- TRANSACTION CLAIM PORTAL -->
+        <div class="card">
+            <h2>Receive Mcoins 📥</h2>
+            <p style="color:#666; font-size:13px; margin-top:-8px;">Paste a transfer code sent by a friend to claim coins</p>
+            
+            <textarea id="claimInput" rows="3" placeholder="Paste the transfer code stream here..."></textarea>
+            <button onclick="claimTransferCode()" style="background:#2ecc71;">Claim Received Mcoins</button>
+            <div id="claimStatus" class="status"></div>
         </div>
     </div>
 
     <script>
-        // Set initial wallet balance to what you've earned
         let currentBalance = 1.67;
 
         function processDeposit(input) {
@@ -61,7 +68,6 @@
                 try {
                     let decryptedText = atob(e.target.result);
                     let logData = JSON.parse(decryptedText);
-
                     let expectedHash = btoa(`Mcoin-${logData.runtimeSeconds}-${logData.timestamp}`);
                     
                     if (logData.currency !== "Mcoin" || logData.verificationHash !== expectedHash) {
@@ -74,7 +80,6 @@
                     document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
                     document.getElementById('depositStatus').innerText = `✅ Success! +${earnedCoins.toFixed(2)} M deposited.`;
                     document.getElementById('depositStatus').style.color = "#2ecc71";
-
                 } catch (err) {
                     document.getElementById('depositStatus').innerText = "❌ Error: Invalid or tampered log file.";
                     document.getElementById('depositStatus').style.color = "#e74c3c";
@@ -83,85 +88,69 @@
             reader.readAsText(file);
         }
 
-        function executeTransaction() {
-            let recipient = document.getElementById('recipientName').value.trim();
+        // 1. SENDER: Generates a code and subtracts from their balance
+        function generateTransferCode() {
             let amount = parseFloat(document.getElementById('transferAmount').value);
             let txStatus = document.getElementById('txStatus');
 
-            if (!recipient) {
-                txStatus.innerText = "❌ Please enter a valid recipient name.";
-                txStatus.style.color = "#e74c3c";
-                return;
-            }
             if (isNaN(amount) || amount <= 0) {
-                txStatus.innerText = "❌ Please enter a positive transfer amount.";
                 txStatus.style.color = "#e74c3c";
+                txStatus.innerText = "❌ Enter a valid positive amount.";
                 return;
             }
             if (amount > currentBalance) {
-                txStatus.innerText = `❌ Insufficient funds! You only have ${currentBalance.toFixed(2)} M.`;
                 txStatus.style.color = "#e74c3c";
+                txStatus.innerText = `❌ Insufficient funds! Max: ${currentBalance.toFixed(2)} M`;
                 return;
             }
 
-            // Deduct funds
+            // Deduct balance from sender
             currentBalance -= amount;
             document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
-            
-            // Success receipt
-            txStatus.innerText = `💸 Sent ${amount.toFixed(2)} M to ${recipient} successfully!`;
-            txStatus.style.color = "#2ecc71";
 
-            // Clear the transaction fields
-            document.getElementById('recipientName').value = "";
+            // Package transaction data securely
+            let txData = {
+                type: "transfer",
+                value: amount,
+                timestamp: Date.now(),
+                securityKey: btoa(`Tx-${amount}-${Date.now()}`)
+            };
+            let codeStream = btoa(JSON.stringify(txData));
+
+            txStatus.style.color = "#2ecc71";
+            txStatus.innerHTML = `💸 Balance Deducted! Copy this code and send it to your friend:<br><br><strong style="background:#f0f0f0; padding:5px; border:1px solid #ccc; display:block; user-select:all; font-family:monospace;">${codeStream}</strong>`;
             document.getElementById('transferAmount').value = "";
         }
-    </script>
-</body>
-</html>
-        let currentWalletBalance = 0.00;
 
-        function processMlog(input) {
-            let file = input.files[0];
-            if (!file) return;
+        // 2. RECIPIENT: Pastes the code to add to their balance
+        function claimTransferCode() {
+            let code = document.getElementById('claimInput').value.trim();
+            let claimStatus = document.getElementById('claimStatus');
 
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let encryptedText = e.target.result.trim();
-                document.getElementById('rawLog').style.display = "block";
-                document.getElementById('rawLog').innerText = "Encrypted Data Stream: " + encryptedText;
+            if (!code) return;
 
-                try {
-                    // Unpack and decrypt the Base64 log
-                    let decryptedText = atob(encryptedText);
-                    let logData = JSON.parse(decryptedText);
+            try {
+                let decrypted = atob(code);
+                let txData = JSON.parse(decrypted);
+                let expectedKey = btoa(`Tx-${txData.value}-${txData.timestamp}`);
 
-                    // Anti-cheat verification rule
-                    let expectedHash = btoa(`Mcoin-${logData.runtimeSeconds}-${logData.timestamp}`);
-                    
-                    if (logData.currency !== "Mcoin" || logData.verificationHash !== expectedHash) {
-                        throw new Error("Tampering detected!");
-                    }
-
-                    // Process legitimate block math (5 coins per hour)
-                    let totalSeconds = logData.runtimeSeconds;
-                    let earnedCoins = totalSeconds * (5 / 3600);
-
-                    // Credit the bank balance
-                    currentWalletBalance += earnedCoins;
-                    document.getElementById('totalBalance').innerText = currentWalletBalance.toFixed(2);
-                    
-                    document.getElementById('statusMessage').innerText = `✅ Deposit Successful! +${earnedCoins.toFixed(2)} Mcoins credited.`;
-                    document.getElementById('statusMessage').style.color = "#2ecc71";
-
-                } catch (err) {
-                    document.getElementById('statusMessage').innerText = "❌ ERROR: Invalid or corrupted Mlog file!";
-                    document.getElementById('statusMessage').style.color = "#e74c3c";
+                if (txData.type !== "transfer" || txData.securityKey !== expectedKey) {
+                    throw new Error("Invalid transfer authenticity.");
                 }
-            };
-            reader.readAsText(file);
+
+                // Add balance to recipient
+                let amountReceived = parseFloat(txData.value);
+                currentBalance += amountReceived;
+                document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
+
+                claimStatus.style.color = "#2ecc71";
+                claimStatus.innerText = `✅ Successfully claimed +${amountReceived.toFixed(2)} Mcoins!`;
+                document.getElementById('claimInput').value = "";
+            } catch (err) {
+                claimStatus.style.color = "#e74c3c";
+                claimStatus.innerText = "❌ Invalid, expired, or altered transfer code.";
+            }
         }
     </script>
 </body>
 </html>
-
