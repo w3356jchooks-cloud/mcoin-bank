@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mcoin Hub: Rig & Bank</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 20px; text-align: center; }
+        .rig-card { background: #1a1a1a; color: #00FF00; border: 2px solid #00FF00; font-family: 'Courier New', monospace; }
+        h1, h2 { color: #4C80F1; margin-top: 0; }
+        .rig-card h1 { color: #00FF00; }
+        .balance-display { font-size: 46px; font-weight: bold; color: #2ecc71; margin: 10px 0; }
+        .rig-counter { font-size: 32px; font-weight: bold; margin: 20px 0; color: #fff; }
+        .wallet-id-tag { background: #e0e4ec; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #555; display: inline-block; margin-bottom: 15px; font-family: monospace; }
+        .status { margin-top: 12px; font-weight: bold; font-size: 14px; word-break: break-all; }
+        .rig-status { font-size: 18px; color: #aaa; margin-bottom: 10px; }
+        input[type="number"], textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        textarea { resize: none; font-family: monospace; background: #fafafa; }
+        button { width: 100%; background: #4C80F1; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        button:hover { background: #3566d4; }
+        .rig-btn { background: #00FF00; color: #121212; font-family: 'Courier New', monospace; }
+        .rig-btn:hover { background: #00cc00; }
+        .rig-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- SECTION 1: THE FARMING RIG -->
+        <div class="card rig-card">
+            <h1>Mcoin Farming Rig v3.1 ⚡</h1>
+            <p>Rate: 5.00 Mcoin per hour</p>
+            <hr style="border-color: #00FF00;">
+            
+            <div class="rig-status">System Status: <span id="state" style="color:#00FF00;">IDLE</span></div>
+            <div class="rig-status" id="timeStarted">Not running</div>
+            
+            <div class="rig-counter"><span id="liveCoins" style="color: #00FF00;">0.0000</span> M</div>
+            <p style="margin-top:-15px; font-size:12px; color:#888;">Live Farmed Balance</p>
+
+            <button id="startBtn" class="rig-btn" onclick="startMining()">START FARMING</button>
+            <button id="stopBtn" class="rig-btn" onclick="stopMining()" disabled>STOP & DEPOSIT TO BANK</button>
+            <div id="depositStatus" class="status"></div>
+        </div>
+
+        <!-- SECTION 2: THE CENTRAL BANK -->
+        <div class="card">
+            <h1>Mcoin Central Bank 🏦</h1>
+            <div class="wallet-id-tag">My Wallet ID: <span id="displayWalletID">ID-000000</span></div>
+            
+            <div class="balance-display"><span id="walletBalance">0.00</span> M</div>
+            <p style="color:#777; margin-top:-10px; font-size:14px; margin-bottom: 20px;">Your Current Bank Balance</p>
+        </div>
+
+        <!-- SECTION 3: SEND COINS -->
+        <div class="card">
+            <h2>Send Mcoins 💸</h2>
+            <p style="color:#666; font-size:13px; margin-top:-8px;">Deduct coins from your wallet to generate a transfer code</p>
+            <input type="number" id="transferAmount" step="0.01" min="0.01" placeholder="Amount to send (M)">
+            <button onclick="generateTransferCode()">Generate Transfer Code</button>
+            <div id="txStatus" class="status"></div>
+        </div>
+
+        <!-- SECTION 4: RECEIVE COINS -->
+        <div class="card">
+            <h2>Receive Mcoins 📥</h2>
+            <p style="color:#666; font-size:13px; margin-top:-8px;">Paste a transfer code sent by a friend to claim coins</p>
+            <textarea id="claimInput" rows="3" placeholder="Paste the transfer code stream here..."></textarea>
+            <button onclick="claimTransferCode()" style="background:#2ecc71;">Claim Received Mcoins</button>
+            <div id="claimStatus" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- BANK CORE LOGIC ---
+        let myWalletID = localStorage.getItem('mcoin_wallet_id');
+        if (!myWalletID) {
+            myWalletID = "ID-" + Math.floor(100000 + Math.random() * 900000);
+            localStorage.setItem('mcoin_wallet_id', myWalletID);
+        }
+        document.getElementById('displayWalletID').innerText = myWalletID;
+
+        let currentBalance = parseFloat(localStorage.getItem('mcoin_bank_bal')) || 0.00;
+        document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
+
+        let usedCodesList = JSON.parse(localStorage.getItem('mcoin_used_codes')) || [];
+
+        function updateBalanceDisplay(newAmount) {
+            currentBalance = newAmount;
+            localStorage.setItem('mcoin_bank_bal', currentBalance);
+            document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
+        }
+
+        // --- RIG CORE LOGIC ---
+        let startTime = null;
+        let displayInterval = null;
+
+        function startMining() {
+            startTime = Date.now();
+            document.getElementById('state').innerText = "MINING ACTIVE";
+            document.getElementById('state').style.color = "#FF3333";
+            document.getElementById('timeStarted').innerText = "Started: " + new Date().toLocaleTimeString();
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('depositStatus').innerText = "";
+
+            displayInterval = setInterval(() => {
+                let elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                let currentEarned = elapsedSeconds * (5 / 3600);
+                document.getElementById('liveCoins').innerText = currentEarned.toFixed(4);
+            }, 1000);
+        }
+
+        function stopMining() {
+            if (!startTime) return;
+            
+            clearInterval(displayInterval);
+            let endTime = Date.now();
+            let totalSeconds = Math.floor((endTime - startTime) / 1000);
+            if (totalSeconds < 1) totalSeconds = 1;
+
+            // Calculate coin value directly
+            let earnedCoins = totalSeconds * (5 / 3600);
+            
+            // Instantly transfer to the Bank Balance! No file uploads required!
+            updateBalanceDisplay(currentBalance + earnedCoins);
+
+            document.getElementById('depositStatus').innerText = `✅ Success! +${earnedCoins.toFixed(4)} M auto-deposited to bank.`;
+            document.getElementById('depositStatus').style.color = "#00FF00";
+            
+            // Reset Rig UI
+            document.getElementById('state').innerText = "IDLE";
+            document.getElementById('state').style.color = "#00FF00";
+            document.getElementById('timeStarted').innerText = `Saved block! Total seconds: ${totalSeconds}`;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('liveCoins').innerText = "0.0000";
+            startTime = null;
+        }
+
+        // --- TRANSACTIONS LOGIC ---
+        function generateTransferCode() {
+            let amount = parseFloat(document.getElementById('transferAmount').value);
+            let txStatus = document.getElementById('txStatus');
+
+            if (isNaN(amount) || amount <= 0) {
+                txStatus.style.color = "#e74c3c";
+                txStatus.innerText = "❌ Enter a valid positive amount.";
+                return;
+            }
+            if (amount > currentBalance) {
+                txStatus.style.color = "#e74c3c";
+                txStatus.innerText = `❌ Insufficient funds! Max: ${currentBalance.toFixed(2)} M`;
+                return;
+            }
+
+            updateBalanceDisplay(currentBalance - amount);
+
+            let uniqueTxId = "TX-" + Math.floor(100000 + Math.random() * 900000) + "-" + Date.now();
+
+            let txData = {
+                type: "transfer",
+                senderID: myWalletID,
+                value: amount,
+                txId: uniqueTxId,
+                timestamp: Date.now(),
+                securityKey: btoa(`Tx-${amount}-${Date.now()}`)
+            };
+            let codeStream = btoa(JSON.stringify(txData));
+
+            txStatus.style.color = "#2ecc71";
+            txStatus.innerHTML = `💸 Balance Deducted! Send this code to a friend:<br><br><strong style="background:#f0f0f0; padding:5px; border:1px solid #ccc; display:block; user-select:all; font-family:monospace; word-break:break-all; color:#333;">${codeStream}</strong>`;
+            document.getElementById('transferAmount').value = "";
+        }
+
+        function claimTransferCode() {
+            let code = document.getElementById('claimInput').value.trim();
+            let claimStatus = document.getElementById('claimStatus');
+
+            if (!code) return;
+
+            try {
+                let decrypted = atob(code);
+                let txData = JSON.parse(decrypted);
+                let expectedKey = btoa(`Tx-${txData.value}-${txData.timestamp}`);
+
+                if (txData.type !== "transfer" || txData.securityKey !== expectedKey) {
+                    throw new Error("INVALID");
+                }
+
+                if (txData.senderID === myWalletID) {
+                    throw new Error("SELF_TRANSFER");
+                }
+
+                if (usedCodesList.includes(txData.txId)) {
+                    throw new Error("ALREADY_CLAIMED");
+                }
+
+                let amountReceived = parseFloat(txData.value);
+                
+                usedCodesList.push(txData.txId);
+                localStorage.setItem('mcoin_used_codes', JSON.stringify(usedCodesList));
+
+                updateBalanceDisplay(currentBalance + amountReceived);
+
+                claimStatus.style.color = "#2ecc71";
+                claimStatus.innerText = `✅ Successfully claimed +${amountReceived.toFixed(2)} Mcoins!`;
+                document.getElementById('claimInput').value = "";
+            } catch (err) {
+                claimStatus.style.color = "#e74c3c";
+                if (err.message === "SELF_TRANSFER") {
+                    claimStatus.innerText = "❌ Security Block: You cannot claim your own transfer codes!";
+                } else if (err.message === "ALREADY_CLAIMED") {
+                    claimStatus.innerText = "❌ Transaction Void: This code has already been claimed!";
+                } else {
+                    claimStatus.innerText = "❌ Invalid or altered transfer code.";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
