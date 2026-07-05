@@ -3,37 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mcoin Central Bank</title>
+    <title>Mcoin Central Bank Terminal</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; text-align: center; padding: 40px; color: #333; }
-        .bank-vault { max-width: 500px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h1 { color: #4C80F1; font-size: 32px; }
-        .balance-display { font-size: 48px; font-weight: bold; color: #2ecc71; margin: 20px 0; }
-        .file-upload-zone { border: 3px dashed #4C80F1; padding: 30px; border-radius: 15px; background: #f9f9ff; cursor: pointer; margin-top: 20px; }
-        .file-upload-zone:hover { background: #f0f4ff; }
-        input[type="file"] { display: none; }
-        .log-box { font-family: monospace; background: #eee; padding: 10px; border-radius: 5px; font-size: 12px; margin-top: 15px; text-align: left; word-break: break-all; max-height: 100px; overflow-y: auto; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 20px; text-align: center; }
+        h1, h2 { color: #4C80F1; margin-top: 0; }
+        .balance-display { font-size: 46px; font-weight: bold; color: #2ecc71; margin: 10px 0; }
+        .upload-zone { border: 2px dashed #4C80F1; padding: 20px; border-radius: 12px; cursor: pointer; background: #f9f9ff; transition: 0.2s; position: relative; }
+        .upload-zone:hover { background: #f0f3ff; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        button { width: 100%; background: #4C80F1; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        button:hover { background: #3566d4; }
+        .status { margin-top: 12px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="bank-vault">
-        <h1>Mcoin Central Bank 🏦</h1>
-        <p>Upload your <code>Mlog.txt</code> file below to claim your farmed earnings.</p>
-        
-        <div class="balance-display"><span id="totalBalance">0.00</span> M</div>
-        <p style="color:#777; margin-top:-10px;">Your Current Balance</p>
+    <div class="container">
+        <!-- WALLET VAULT CARD -->
+        <div class="card">
+            <h1>Mcoin Central Bank 🏦</h1>
+            <div class="balance-display"><span id="walletBalance">1.67</span> M</div>
+            <p style="color:#777; margin-top:-10px; font-size:14px; margin-bottom: 20px;">Your Current Bank Balance</p>
+            
+            <!-- Deposit Section -->
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                <p style="margin: 0; font-weight: 500; color: #4C80F1;">📁 Tap to Upload Mlog.txt</p>
+                <input type="file" id="fileInput" accept=".txt" style="display:none;" onchange="processDeposit(this)">
+            </div>
+            <div id="depositStatus" class="status"></div>
+        </div>
 
-        <label class="file-upload-zone">
-            <span>📁 Tap to Upload Mlog.txt</span>
-            <input type="file" id="fileInput" accept=".txt" onchange="processMlog(this)">
-        </label>
-
-        <div id="statusMessage" style="margin-top: 15px; font-weight: bold;"></div>
-        <div id="rawLog" class="log-box" style="display: none;"></div>
+        <!-- TRANSACTION PORTAL CARD -->
+        <div class="card">
+            <h2>Send Mcoins 💳</h2>
+            <p style="color:#666; font-size:13px; margin-top:-8px;">Transfer currency instantly to another user</p>
+            
+            <input type="text" id="recipientName" placeholder="Enter Recipient's Name / Wallet ID">
+            <input type="number" id="transferAmount" step="0.01" min="0.01" placeholder="Amount to send (M)">
+            
+            <button onclick="executeTransaction()">Confirm & Send Transfer</button>
+            <div id="txStatus" class="status"></div>
+        </div>
     </div>
 
     <script>
+        // Set initial wallet balance to what you've earned
+        let currentBalance = 1.67;
+
+        function processDeposit(input) {
+            let file = input.files[0];
+            if (!file) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let decryptedText = atob(e.target.result);
+                    let logData = JSON.parse(decryptedText);
+
+                    let expectedHash = btoa(`Mcoin-${logData.runtimeSeconds}-${logData.timestamp}`);
+                    
+                    if (logData.currency !== "Mcoin" || logData.verificationHash !== expectedHash) {
+                        throw new Error("Invalid Hash");
+                    }
+
+                    let earnedCoins = logData.runtimeSeconds * (5 / 3600);
+                    currentBalance += earnedCoins;
+                    
+                    document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
+                    document.getElementById('depositStatus').innerText = `✅ Success! +${earnedCoins.toFixed(2)} M deposited.`;
+                    document.getElementById('depositStatus').style.color = "#2ecc71";
+
+                } catch (err) {
+                    document.getElementById('depositStatus').innerText = "❌ Error: Invalid or tampered log file.";
+                    document.getElementById('depositStatus').style.color = "#e74c3c";
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function executeTransaction() {
+            let recipient = document.getElementById('recipientName').value.trim();
+            let amount = parseFloat(document.getElementById('transferAmount').value);
+            let txStatus = document.getElementById('txStatus');
+
+            if (!recipient) {
+                txStatus.innerText = "❌ Please enter a valid recipient name.";
+                txStatus.style.color = "#e74c3c";
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                txStatus.innerText = "❌ Please enter a positive transfer amount.";
+                txStatus.style.color = "#e74c3c";
+                return;
+            }
+            if (amount > currentBalance) {
+                txStatus.innerText = `❌ Insufficient funds! You only have ${currentBalance.toFixed(2)} M.`;
+                txStatus.style.color = "#e74c3c";
+                return;
+            }
+
+            // Deduct funds
+            currentBalance -= amount;
+            document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
+            
+            // Success receipt
+            txStatus.innerText = `💸 Sent ${amount.toFixed(2)} M to ${recipient} successfully!`;
+            txStatus.style.color = "#2ecc71";
+
+            // Clear the transaction fields
+            document.getElementById('recipientName').value = "";
+            document.getElementById('transferAmount').value = "";
+        }
+    </script>
+</body>
+</html>
         let currentWalletBalance = 0.00;
 
         function processMlog(input) {
