@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mcoin Ecosystem Hub</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 20px; text-align: center; }
+        .rig-card { background: #1a1a1a; color: #00FF00; border: 2px solid #00FF00; font-family: 'Courier New', monospace; }
+        .minigame-card { background: #fff5e6; border: 2px solid #ffa500; }
+        .shop-card { background: #f0f3ff; border: 2px solid #4C80F1; }
+        h1, h2 { color: #4C80F1; margin-top: 0; }
+        .rig-card h1 { color: #00FF00; }
+        .minigame-card h2 { color: #d48800; }
+        .balance-display { font-size: 46px; font-weight: bold; color: #2ecc71; margin: 10px 0; }
+        .rig-counter { font-size: 32px; font-weight: bold; margin: 20px 0; color: #fff; }
+        .wallet-id-tag { background: #e0e4ec; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #555; display: inline-block; margin-bottom: 15px; font-family: monospace; }
+        .status { margin-top: 12px; font-weight: bold; font-size: 14px; word-break: break-all; }
+        .rig-status { font-size: 18px; color: #aaa; margin-bottom: 10px; }
+        input[type="number"], textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        textarea { resize: none; font-family: monospace; background: #fafafa; }
+        button { width: 100%; background: #4C80F1; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        button:hover { background: #3566d4; }
+        .rig-btn { background: #00FF00; color: #121212; font-family: 'Courier New', monospace; }
+        .rig-btn:hover { background: #00cc00; }
+        .rig-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+        .game-btn { background: #ffa500; color: white; }
+        .game-btn:hover { background: #e69500; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="card">
+            <h1>Mcoin Central Bank 🏦</h1>
+            <div class="wallet-id-tag">My Wallet ID: <span id="displayWalletID">ID-000000</span></div>
+            <div class="balance-display"><span id="walletBalance">0.00</span> M</div>
+            <p style="color:#777; margin-top:-10px; font-size:14px; margin-bottom: 20px;">Your Current Bank Balance</p>
+        </div>
+        
+        <div class="card rig-card">
+            <h1>Mcoin Farming Rig v4.0 ⚡</h1>
+            <p>Current Efficiency: <span id="currentRateLabel">5.00</span> Mcoin/hr</p>
+            <hr style="border-color: #00FF00;">
+            
+            <div class="rig-status">System Status: <span id="state" style="color:#00FF00;">IDLE</span></div>
+            <div class="rig-status" id="timeStarted">Not running</div>
+            
+            <div class="rig-counter"><span id="liveCoins" style="color: #00FF00;">0.0000</span> M</div>
+            <p style="margin-top:-15px; font-size:12px; color:#888;">Live Farmed Balance</p>
+
+            <button id="startBtn" class="rig-btn" onclick="startMining()">START FARMING</button>
+            <button id="stopBtn" class="rig-btn" onclick="stopMining()" disabled>STOP & AUTO-DEPOSIT</button>
+            <div id="depositStatus" class="status"></div>
+        </div>
+
+        <div class="card shop-card">
+            <h2>Mcoin Upgrade Shop 🛒</h2>
+            <p style="color:#555; font-size:13px; margin-top:-8px;">Spend your Mcoins to unlock game upgrades</p>
+            <div style="background:white; padding:15px; border-radius:10px; border:1px solid #d0d7de; text-align:left; font-size:14px;">
+                <strong>⚡ Super Rig License</strong><br>
+                Permanently increases farming speed from 5.00/hr to 15.00/hr.<br>
+                <span style="color:#2ecc71; font-weight:bold;">Cost: 5.00 M</span>
+            </div>
+            <button id="buyUpgradeBtn" onclick="buyRigUpgrade()">Purchase Super Rig License</button>
+            <div id="shopStatus" class="status"></div>
+        </div>
+
+        <div class="card minigame-card">
+            <h2>Coin Flipper Casino 🎰</h2>
+            <p style="color:#666; font-size:13px; margin-top:-8px;">Double your money or lose it all! 50% Win Rate.</p>
+            <input type="number" id="gambleAmount" step="0.01" min="0.01" placeholder="Bet Amount (M)">
+            <select id="coinChoice">
+                <option value="heads">Heads</option>
+                <option value="tails">Tails</option>
+            </select>
+            <button class="game-btn" onclick="playCoinFlip()">Flip the Coin!</button>
+            <div id="gameStatus" class="status"></div>
+        </div>
+
+        <div class="card">
+            <h2>Send Mcoins 💸</h2>
+            <input type="number" id="transferAmount" step="0.01" min="0.01" placeholder="Amount to send (M)">
+            <button onclick="generateTransferCode()">Generate Transfer Code</button>
+            <div id="txStatus" class="status"></div>
+        </div>
+
+        <div class="card">
+            <h2>Receive Mcoins 📥</h2>
+            <textarea id="claimInput" rows="2" placeholder="Paste transfer code here..."></textarea>
+            <button onclick="claimTransferCode()" style="background:#2ecc71;">Claim Received Mcoins</button>
+            <div id="claimStatus" class="status"></div>
+        </div>
+
+        <div class="card" style="background:#f6f8fa;">
+            <h2>Leaderboard Score Exporter 🏆</h2>
+            <p style="color:#666; font-size:13px; margin-top:-8px;">Generate an anti-cheat submission token for your teacher/leaderboard</p>
+            <button onclick="exportLeaderboardToken()" style="background:#6f42c1;">Generate Secure Leaderboard Token</button>
+            <div id="leaderboardStatus" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CORE ACCOUNTS SETUP ---
+        let myWalletID = localStorage.getItem('mcoin_wallet_id') || "ID-" + Math.floor(100000 + Math.random() * 900000);
+        localStorage.setItem('mcoin_wallet_id', myWalletID);
+        document.getElementById('displayWalletID').innerText = myWalletID;
+
+        let currentBalance = parseFloat(localStorage.getItem('mcoin_bank_bal')) || 0.00;
+        document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
+
+        let usedCodesList = JSON.parse(localStorage.getItem('mcoin_used_codes')) || [];
+        
+        let customFarmingRate = parseFloat(localStorage.getItem('mcoin_farm_rate')) || 5.00;
+        document.getElementById('currentRateLabel').innerText = customFarmingRate.toFixed(2);
+        if (customFarmingRate > 5.00) {
+            document.getElementById('buyUpgradeBtn').disabled = true;
+            document.getElementById('buyUpgradeBtn').innerText = "Owned";
+        }
+
+        function updateBalanceDisplay(newAmount) {
+            currentBalance = newAmount;
+            localStorage.setItem('mcoin_bank_bal', currentBalance);
+            document.getElementById('walletBalance').innerText = currentBalance.toFixed(2);
+        }
+
+        // --- FARMING ENGINE ---
+        let startTime = null;
+        let displayInterval = null;
+
+        function startMining() {
+            startTime = Date.now();
+            document.getElementById('state').innerText = "MINING ACTIVE";
+            document.getElementById('state').style.color = "#FF3333";
+            document.getElementById('timeStarted').innerText = "Started: " + new Date().toLocaleTimeString();
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('depositStatus').innerText = "";
+
+            displayInterval = setInterval(() => {
+                let elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                let currentEarned = elapsedSeconds * (customFarmingRate / 3600);
+                document.getElementById('liveCoins').innerText = currentEarned.toFixed(4);
+            }, 1000);
+        }
+
+        function stopMining() {
+            if (!startTime) return;
+            clearInterval(displayInterval);
+            let totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+            if (totalSeconds < 1) totalSeconds = 1;
+
+            let earnedCoins = totalSeconds * (customFarmingRate / 3600);
+            updateBalanceDisplay(currentBalance + earnedCoins);
+
+            document.getElementById('depositStatus').innerText = `✅ Auto-deposited +${earnedCoins.toFixed(4)} M!`;
+            document.getElementById('depositStatus').style.color = "#00FF00";
+            
+            document.getElementById('state').innerText = "IDLE";
+            document.getElementById('state').style.color = "#00FF00";
+            document.getElementById('timeStarted').innerText = `Last run duration: ${totalSeconds}s`;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('liveCoins').innerText = "0.0000";
+            startTime = null;
+        }
+
+        // --- ECOSYSTEM UPGRADE SHOP ---
+        function buyRigUpgrade() {
+            let shopStatus = document.getElementById('shopStatus');
+            if (currentBalance < 5.00) {
+                shopStatus.style.color = "#e74c3c";
+                shopStatus.innerText = "❌ Insufficient balance! You need 5.00 Mcoins.";
+                return;
+            }
+            updateBalanceDisplay(currentBalance - 5.00);
+            customFarmingRate = 15.00;
+            localStorage.setItem('mcoin_farm_rate', customFarmingRate);
+            document.getElementById('currentRateLabel').innerText = "15.00";
+            document.getElementById('buyUpgradeBtn').disabled = true;
+            document.getElementById('buyUpgradeBtn').innerText = "Owned";
+            shopStatus.style.color = "#2ecc71";
+            shopStatus.innerText = "⚡ Success! Rig upgraded to 15.00 M/hr!";
+        }
+
+        // --- CASINO MINIGAME ---
+        function playCoinFlip() {
+            let bet = parseFloat(document.getElementById('gambleAmount').value);
+            let choice = document.getElementById('coinChoice').value;
+            let gameStatus = document.getElementById('gameStatus');
+
+            if (isNaN(bet) || bet <= 0 || bet > currentBalance) {
+                gameStatus.style.color = "#e74c3c";
+                gameStatus.innerText = "❌ Enter a valid bet within your balance limits.";
+                return;
+            }
+
+            let result = Math.random() < 0.5 ? "heads" : "tails";
+            if (choice === result) {
+                updateBalanceDisplay(currentBalance + bet);
+                gameStatus.style.color = "#2ecc71";
+                gameStatus.innerText = `🎉 The coin landed on ${result.toUpperCase()}! You won +${bet.toFixed(2)} M!`;
+            } else {
+                updateBalanceDisplay(currentBalance - bet);
+                gameStatus.style.color = "#e74c3c";
+                gameStatus.innerText = `😢 The coin landed on ${result.toUpperCase()}! You lost ${bet.toFixed(2)} M.`;
+            }
+        }
+
+        // --- TRANSACTIONS TRACKING ---
+        function generateTransferCode() {
+            let amount = parseFloat(document.getElementById('transferAmount').value);
+            let txStatus = document.getElementById('txStatus');
+            if (isNaN(amount) || amount <= 0 || amount > currentBalance) {
+                txStatus.style.color = "#e74c3c";
+                txStatus.innerText = "❌ Invalid transaction execution payload.";
+                return;
+            }
+            updateBalanceDisplay(currentBalance - amount);
+            let uniqueTxId = "TX-" + Math.floor(100000 + Math.random() * 900000) + "-" + Date.now();
+            let txData = { type: "transfer", senderID: myWalletID, value: amount, txId: uniqueTxId, timestamp: Date.now(), securityKey: btoa(`Tx-${amount}-${Date.now()}`) };
+            txStatus.style.color = "#2ecc71";
+            txStatus.innerHTML = `<strong style="background:#f0f0f0; padding:5px; border:1px solid #ccc; display:block; user-select:all; font-family:monospace; word-break:break-all; color:#333;">${btoa(JSON.stringify(txData))}</strong>`;
+            document.getElementById('transferAmount').value = "";
+        }
+
+        function claimTransferCode() {
+            let code = document.getElementById('claimInput').value.trim();
+            let claimStatus = document.getElementById('claimStatus');
+            if (!code) return;
+            try {
+                let txData = JSON.parse(atob(code));
+                let expectedKey = btoa(`Tx-${txData.value}-${txData.timestamp}`);
+                if (txData.type !== "transfer" || txData.securityKey !== expectedKey || txData.senderID === myWalletID || usedCodesList.includes(txData.txId)) {
+                    throw new Error("REJECTED");
+                }
+                usedCodesList.push(txData.txId);
+                localStorage.setItem('mcoin_used_codes', JSON.stringify(usedCodesList));
+                updateBalanceDisplay(currentBalance + parseFloat(txData.value));
+                claimStatus.style.color = "#2ecc71";
+                claimStatus.innerText = `✅ Successfully claimed +${parseFloat(txData.value).toFixed(2)} M!`;
+                document.getElementById('claimInput').value = "";
+            } catch (err) {
+                claimStatus.style.color = "#e74c3c";
+                claimStatus.innerText = "❌ Verification failed or token expired.";
+            }
+        }
+
+        // --- SCORE LEADERBOARD SYSTEM ---
+        function exportLeaderboardToken() {
+            let tokenData = { player: myWalletID, balance: currentBalance, exportTime: Date.now(), hash: btoa(`Score-${myWalletID}-${currentBalance}`) };
+            let compiledToken = btoa(JSON.stringify(tokenData));
+            let lbStatus = document.getElementById('leaderboardStatus');
+            lbStatus.style.color = "#6f42c1";
+            lbStatus.innerHTML = `📋 Copy this token and give it to your admin:<br><br><textarea rows="3" readonly style="user-select:all;">${compiledToken}</textarea>`;
+        }
+    </script>
+</body>
+</html>
+
