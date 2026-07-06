@@ -68,25 +68,28 @@
 </head>
 <body>
 
+    <!-- WALLET & BANK CARD -->
     <div class="card">
         <h1>Mcoin Farming Rig v3.2 ⚡</h1>
         <p>User: <span id="displayUsername" style="color:#79c0ff; font-weight:bold;">Loading...</span></p>
         <div class="balance-display"><span id="walletBalance">0.0000</span> M</div>
         <p class="status">System Status: <span style="color:#56d364;">ONLINE & FARMING</span></p>
-        <p class="status">Current Speed: <span id="currentRateLabel">1.00</span> M/sec</p>
+        <p class="status">Current Speed: <span id="currentRateLabel">5.00</span> M/hour</p>
     </div>
 
+    <!-- UPGRADE SHOP CARD -->
     <div class="card">
         <h2>🛒 Upgrade Assembly Shop</h2>
         <div class="shop-item">
             <div style="text-align: left;">
                 <div style="font-weight:bold;">Advanced GPU Rig Upgrade</div>
-                <div style="font-size:12px; color:#8b949e;">Increases farming speed permanently</div>
+                <div style="font-size:12px; color:#8b949e;">Increases farming yield rate permanently</div>
             </div>
             <button id="buyUpgradeBtn" onclick="buyFarmingUpgrade()" style="width:auto; margin:0;">Cost: <span id="upgradeCostLabel">50.00</span> M</button>
         </div>
     </div>
 
+    <!-- TOKEN GENERATOR CARD FOR STUDENTS -->
     <div class="card">
         <h2>📤 Export High Score Token</h2>
         <p style="font-size:13px; color:#8b949e;">Generate a secure, anti-cheat code snippet of your current progress to send to your teacher/admin.</p>
@@ -94,15 +97,18 @@
         <textarea id="generatedTokenDisplay" rows="3" readonly placeholder="Your secure verification token will appear here..." onclick="this.select()"></textarea>
     </div>
 
+    <!-- SECRET ADMIN CLOUD LEADERBOARD CONTROLLER -->
     <div id="adminModule" style="margin-top: 30px; padding: 15px; background: #1a1b26; border: 2px dashed #ff9e64; border-radius: 8px; font-family: monospace; text-align: left;">
         <h3 style="color: #ff9e64; margin-top: 0; text-align: center;">👑 Cloud Leaderboard Manager</h3>
         
+        <!-- Secret Login Gate -->
         <div id="adminLoginGate" style="text-align: center;">
             <p style="color: #a9b1d6; font-size: 13px;">Enter admin password to unlock class scoring controls:</p>
             <input type="password" id="adminPassInput" style="background: #24283b; color: #c0caf5; border: 1px solid #ff9e64; padding: 5px; text-align: center;" placeholder="Password">
             <button onclick="checkAdminLogin()" style="background: #ff9e64; color: #1a1b26; border: none; padding: 5px 10px; cursor: pointer; margin-top: 5px; font-weight: bold; width: auto;">UNLOCK</button>
         </div>
 
+        <!-- Active Management Board (Hidden by default) -->
         <div id="adminDashboard" style="display: none;">
             <label style="color: #7aa2f7; font-weight: bold; display: block; margin-bottom: 5px;">PASTE STUDENT LEADERBOARD TOKEN:</label>
             <textarea id="rawTokenInput" rows="3" style="width: 100%; background: #24283b; color: #9ece6a; border: 1px solid #565f89; font-family: monospace;" placeholder="Paste the encoded text token your classmate sent you here..."></textarea>
@@ -116,6 +122,7 @@
         </div>
     </div>
 
+    <!-- SYSTEM ECOSYSTEM ENGINE LOGIC -->
     <script>
         // Set up tracking variables
         let username = localStorage.getItem("mcoin_username") || "Player_" + Math.floor(Math.random() * 9000 + 1000);
@@ -123,7 +130,8 @@
         document.getElementById("displayUsername").innerText = username;
 
         let currentBalance = parseFloat(localStorage.getItem("mcoin_balance")) || 0.0000;
-        let customFarmingRate = parseFloat(localStorage.getItem("mcoin_farm_rate")) || 1.00;
+        // Tracking rate represents Mcoins per Hour (Default: 5.00 M/hour)
+        let customFarmingRate = parseFloat(localStorage.getItem("mcoin_farm_rate")) || 5.00;
         let upgradeCost = parseFloat(localStorage.getItem("mcoin_upgrade_cost")) || 50.00;
 
         // Render current stats on load
@@ -131,18 +139,21 @@
         document.getElementById("currentRateLabel").innerText = customFarmingRate.toFixed(2);
         document.getElementById("upgradeCostLabel").innerText = upgradeCost.toFixed(2);
 
-        // Core Automated Farming Loop (Adds coins passively every second)
+        // Core Automated Farming Loop (Calculated to tick smoothly every 1 second)
         setInterval(() => {
-            currentBalance += (customFarmingRate / 10);
+            // Formula conversion: (CoinsPerHour / 3600 seconds) gives the fractional gain per second
+            let coinsPerSecond = customFarmingRate / 3600;
+            currentBalance += coinsPerSecond;
+            
             document.getElementById("walletBalance").innerText = currentBalance.toFixed(4);
             localStorage.setItem("mcoin_balance", currentBalance.toFixed(4));
-        }, 100);
+        }, 1000);
 
         // Shop Purchase Logic
         function buyFarmingUpgrade() {
             if (currentBalance >= upgradeCost) {
                 currentBalance -= upgradeCost;
-                customFarmingRate += 1.50; // Add production speed boost
+                customFarmingRate += 2.50; // Add an extra +2.50 Mcoins/hour per upgrade level
                 upgradeCost = upgradeCost * 1.8; // Scale shop inflation price
                 
                 // Commit to hardware memory
@@ -154,7 +165,7 @@
                 document.getElementById("walletBalance").innerText = currentBalance.toFixed(4);
                 document.getElementById("currentRateLabel").innerText = customFarmingRate.toFixed(2);
                 document.getElementById("upgradeCostLabel").innerText = upgradeCost.toFixed(2);
-                alert("🚀 Multiplier Rig Purchased! Farming speeds increased!");
+                alert("🚀 Multiplier Rig Purchased! Base mining engine outputs scaled higher!");
             } else {
                 alert("❌ Insufficient Mcoin capital available for upgrade production.");
             }
