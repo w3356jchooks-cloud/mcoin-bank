@@ -22,7 +22,7 @@
             text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        h1, h2, h3 { margin-top: 0; color: #58a6ff; }
+        h1, h2, h3, h4 { margin-top: 0; color: #58a6ff; }
         .balance-display {
             font-size: 36px;
             font-weight: bold;
@@ -64,20 +64,46 @@
             border-radius: 6px;
             margin-top: 10px;
         }
+        .flex-container {
+            display: flex;
+            gap: 10px;
+        }
+        .flex-container input {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
 
-    <!-- WALLET & BANK CARD -->
     <div class="card">
-        <h1>Mcoin Farming Rig v3.2 ⚡</h1>
-        <p>User: <span id="displayUsername" style="color:#79c0ff; font-weight:bold;">Loading...</span></p>
+        <h1>Mcoin Farming Rig v3.3 ⚡</h1>
+        <p>User identity handle: <span id="displayUsername" style="color:#79c0ff; font-weight:bold;">Loading...</span></p>
         <div class="balance-display"><span id="walletBalance">0.0000</span> M</div>
-        <p class="status">System Status: <span style="color:#56d364;">ONLINE & FARMING</span></p>
+        <p class="status">System Status: <span style="color:#56d364;">ONLINE & PASSIVE FARMING</span></p>
         <p class="status">Current Speed: <span id="currentRateLabel">5.00</span> M/hour</p>
     </div>
 
-    <!-- UPGRADE SHOP CARD -->
+    <div class="card" style="border-color: #ff79c6;">
+        <h2 style="color: #ff79c6;">💸 P2P Token Transfer Station</h2>
+        <p style="font-size:13px; color:#8b949e; margin-bottom: 15px;">Send coins securely to a classmate or redeem an incoming transfer code.</p>
+        
+        <div style="border-bottom: 1px dashed #30363d; padding-bottom: 15px; margin-bottom: 15px; text-align: left;">
+            <h4 style="color: #ff79c6; margin-bottom: 8px;">1. Create a Voucher (Send)</h4>
+            <div class="flex-container">
+                <input type="text" id="recipientInput" placeholder="Recipient's Exact Username">
+                <input type="number" id="sendAmountInput" step="0.01" min="0.01" placeholder="Amount (M)">
+            </div>
+            <button onclick="createTransferVoucher()" style="background-color: #ff79c6; color: #0f111a; font-weight: bold;">GENERATE WIRE VOUCHER</button>
+            <textarea id="generatedVoucherDisplay" rows="2" readonly placeholder="Send this generated voucher string to your recipient..." onclick="this.select()"></textarea>
+        </div>
+
+        <div style="text-align: left;">
+            <h4 style="color: #56d364; margin-bottom: 8px;">2. Redeem a Voucher (Receive)</h4>
+            <textarea id="redeemInput" rows="2" placeholder="Paste the wire voucher code you received here..."></textarea>
+            <button onclick="redeemTransferVoucher()" style="background-color: #56d364; color: #0f111a; font-weight: bold;">CLAIM & INJECT MCOINS</button>
+        </div>
+    </div>
+
     <div class="card">
         <h2>🛒 Upgrade Assembly Shop</h2>
         <div class="shop-item">
@@ -89,7 +115,6 @@
         </div>
     </div>
 
-    <!-- TOKEN GENERATOR CARD FOR STUDENTS -->
     <div class="card">
         <h2>📤 Export High Score Token</h2>
         <p style="font-size:13px; color:#8b949e;">Generate a secure, anti-cheat code snippet of your current progress to send to your teacher/admin.</p>
@@ -97,18 +122,15 @@
         <textarea id="generatedTokenDisplay" rows="3" readonly placeholder="Your secure verification token will appear here..." onclick="this.select()"></textarea>
     </div>
 
-    <!-- SECRET ADMIN CLOUD LEADERBOARD CONTROLLER -->
     <div id="adminModule" style="margin-top: 30px; padding: 15px; background: #1a1b26; border: 2px dashed #ff9e64; border-radius: 8px; font-family: monospace; text-align: left;">
         <h3 style="color: #ff9e64; margin-top: 0; text-align: center;">👑 Cloud Leaderboard Manager</h3>
         
-        <!-- Secret Login Gate -->
         <div id="adminLoginGate" style="text-align: center;">
             <p style="color: #a9b1d6; font-size: 13px;">Enter admin password to unlock class scoring controls:</p>
             <input type="password" id="adminPassInput" style="background: #24283b; color: #c0caf5; border: 1px solid #ff9e64; padding: 5px; text-align: center;" placeholder="Password">
             <button onclick="checkAdminLogin()" style="background: #ff9e64; color: #1a1b26; border: none; padding: 5px 10px; cursor: pointer; margin-top: 5px; font-weight: bold; width: auto;">UNLOCK</button>
         </div>
 
-        <!-- Active Management Board (Hidden by default) -->
         <div id="adminDashboard" style="display: none;">
             <label style="color: #7aa2f7; font-weight: bold; display: block; margin-bottom: 5px;">PASTE STUDENT LEADERBOARD TOKEN:</label>
             <textarea id="rawTokenInput" rows="3" style="width: 100%; background: #24283b; color: #9ece6a; border: 1px solid #565f89; font-family: monospace;" placeholder="Paste the encoded text token your classmate sent you here..."></textarea>
@@ -122,7 +144,6 @@
         </div>
     </div>
 
-    <!-- SYSTEM ECOSYSTEM ENGINE LOGIC -->
     <script>
         // Set up tracking variables
         let username = localStorage.getItem("mcoin_username") || "Player_" + Math.floor(Math.random() * 9000 + 1000);
@@ -130,7 +151,6 @@
         document.getElementById("displayUsername").innerText = username;
 
         let currentBalance = parseFloat(localStorage.getItem("mcoin_balance")) || 0.0000;
-        // Tracking rate represents Mcoins per Hour (Default: 5.00 M/hour)
         let customFarmingRate = parseFloat(localStorage.getItem("mcoin_farm_rate")) || 5.00;
         let upgradeCost = parseFloat(localStorage.getItem("mcoin_upgrade_cost")) || 50.00;
 
@@ -139,9 +159,8 @@
         document.getElementById("currentRateLabel").innerText = customFarmingRate.toFixed(2);
         document.getElementById("upgradeCostLabel").innerText = upgradeCost.toFixed(2);
 
-        // Core Automated Farming Loop (Calculated to tick smoothly every 1 second)
+        // Core Automated Farming Loop (smooth updates every second)
         setInterval(() => {
-            // Formula conversion: (CoinsPerHour / 3600 seconds) gives the fractional gain per second
             let coinsPerSecond = customFarmingRate / 3600;
             currentBalance += coinsPerSecond;
             
@@ -153,21 +172,103 @@
         function buyFarmingUpgrade() {
             if (currentBalance >= upgradeCost) {
                 currentBalance -= upgradeCost;
-                customFarmingRate += 2.50; // Add an extra +2.50 Mcoins/hour per upgrade level
-                upgradeCost = upgradeCost * 1.8; // Scale shop inflation price
+                customFarmingRate += 2.50; // Add +2.50 Mcoins/hour per upgrade
+                upgradeCost = upgradeCost * 1.8; // Scale price
                 
-                // Commit to hardware memory
                 localStorage.setItem("mcoin_balance", currentBalance.toFixed(4));
                 localStorage.setItem("mcoin_farm_rate", customFarmingRate.toFixed(2));
                 localStorage.setItem("mcoin_upgrade_cost", upgradeCost.toFixed(2));
 
-                // Update UI Display tags
                 document.getElementById("walletBalance").innerText = currentBalance.toFixed(4);
                 document.getElementById("currentRateLabel").innerText = customFarmingRate.toFixed(2);
                 document.getElementById("upgradeCostLabel").innerText = upgradeCost.toFixed(2);
-                alert("🚀 Multiplier Rig Purchased! Base mining engine outputs scaled higher!");
+                alert("🚀 Multiplier Rig Purchased! Base production speeds boosted!");
             } else {
                 alert("❌ Insufficient Mcoin capital available for upgrade production.");
+            }
+        }
+
+        // ==========================================
+        // P2P VOUCHER WIRE SYSTEM LOGIC
+        // ==========================================
+        function createTransferVoucher() {
+            let targetUser = document.getElementById("recipientInput").value.trim();
+            let sendAmount = parseFloat(document.getElementById("sendAmountInput").value);
+
+            if (!targetUser || isNaN(sendAmount) || sendAmount <= 0) {
+                alert("❌ Please specify a valid recipient name and transaction amount.");
+                return;
+            }
+            if (targetUser === username) {
+                alert("❌ You cannot wire Mcoins to yourself!");
+                return;
+            }
+            if (currentBalance < sendAmount) {
+                alert("❌ Transaction Rejected: Insufficient wallet funds available.");
+                return;
+            }
+
+            // Deduct immediately from sender wallet to prevent double spending
+            currentBalance -= sendAmount;
+            document.getElementById("walletBalance").innerText = currentBalance.toFixed(4);
+            localStorage.setItem("mcoin_balance", currentBalance.toFixed(4));
+
+            // Generate an encrypted voucher payload package
+            let voucherData = {
+                sender: username,
+                receiver: targetUser,
+                amount: sendAmount.toFixed(4),
+                voucherID: "TX-" + Math.floor(Math.random() * 899999 + 100000),
+                securitySignature: "MCOIN_P2P_AUTHENTIC_WIRE"
+            };
+
+            let encryptedVoucher = btoa(JSON.stringify(voucherData));
+            document.getElementById("generatedVoucherDisplay").value = encryptedVoucher;
+            
+            // Clear inputs
+            document.getElementById("recipientInput").value = "";
+            document.getElementById("sendAmountInput").value = "";
+            alert(`✅ ${sendAmount.toFixed(2)} M deducted! Copy the generated wire voucher below and send it to ${targetUser}!`);
+        }
+
+        function redeemTransferVoucher() {
+            let rawVoucher = document.getElementById("redeemInput").value.trim();
+            if (!rawVoucher) return;
+
+            try {
+                let decryptedVoucher = JSON.parse(atob(rawVoucher));
+
+                // Anti-Cheat & Security Verifications
+                if (decryptedVoucher.securitySignature !== "MCOIN_P2P_AUTHENTIC_WIRE") {
+                    throw new Error("Fraudulent signature code formatting.");
+                }
+                if (decryptedVoucher.receiver !== username) {
+                    alert(`❌ Verification Failed: This voucher was issued exclusively for "${decryptedVoucher.receiver}". Your username does not match!`);
+                    return;
+                }
+
+                // Check if this specific tracking ID was already used on this device
+                let usedVouchers = JSON.parse(localStorage.getItem("mcoin_used_vouchers")) || [];
+                if (usedVouchers.includes(decryptedVoucher.voucherID)) {
+                    alert("❌ Transaction Canceled: This voucher code has already been claimed and cannot be recycled!");
+                    return;
+                }
+
+                // Inject Mcoins into matching local wallet profile
+                let addedAmount = parseFloat(decryptedVoucher.amount);
+                currentBalance += addedAmount;
+                document.getElementById("walletBalance").innerText = currentBalance.toFixed(4);
+                localStorage.setItem("mcoin_balance", currentBalance.toFixed(4));
+
+                // Blacklist voucher ID locally to prevent reuse loops
+                usedVouchers.push(decryptedVoucher.voucherID);
+                localStorage.setItem("mcoin_used_vouchers", JSON.stringify(usedVouchers));
+
+                document.getElementById("redeemInput").value = "";
+                alert(`✨ Wire Success! You successfully claimed ${addedAmount.toFixed(2)} Mcoins sent from ${decryptedVoucher.sender}!`);
+
+            } catch (err) {
+                alert("❌ System Error: Invalid, forged, or corrupted transfer voucher code structure.");
             }
         }
 
@@ -179,7 +280,6 @@
                 timestamp: Date.now(),
                 secretCheckSignature: "MCOIN_VERIFIED_CORE_INTEGRITY"
             };
-            // Transform data model into a cryptographically encoded token string
             let secureToken = btoa(JSON.stringify(dataObject));
             document.getElementById("generatedTokenDisplay").value = secureToken;
         }
@@ -191,7 +291,6 @@
 
         function checkAdminLogin() {
             let password = document.getElementById('adminPassInput').value;
-            // MASTER GATE PASSWORD SET TO: mcoinroot
             if (password === 'mcoinroot') {
                 document.getElementById('adminLoginGate').style.display = 'none';
                 document.getElementById('adminDashboard').style.display = 'block';
@@ -208,15 +307,12 @@
             if (!rawToken) return;
 
             try {
-                // Decode the student token
                 let decryptedData = JSON.parse(atob(rawToken));
                 
-                // Anti-Cheat Cryptographic Formula Integrity Check
                 if (decryptedData.secretCheckSignature !== "MCOIN_VERIFIED_CORE_INTEGRITY" || !decryptedData.username) {
                     throw new Error("Tampered or invalid payload signature structure detected.");
                 }
                 
-                // Deduplicate list profiles based on username handles
                 let existingUserIndex = verifiedStandings.findIndex(p => p.name === decryptedData.username);
                 if (existingUserIndex !== -1) {
                     if (parseFloat(decryptedData.balance) > verifiedStandings[existingUserIndex].balance) {
@@ -226,7 +322,6 @@
                     verifiedStandings.push({ name: decryptedData.username, balance: parseFloat(decryptedData.balance) });
                 }
                 
-                // Sort array data dynamically
                 verifiedStandings.sort((a, b) => b.balance - a.balance);
                 localStorage.setItem('mcoin_cloud_leaderboard', JSON.stringify(verifiedStandings));
                 
