@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Core Terminal</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card" style="border-color:#ff9e64; font-family:monospace; font-size:13px;">
+        <h3>👑 Admin Core Engine Control Room (41-50)</h3>
+        <a href="index.html" style="color:#7aa2f7; text-decoration:none; display:block; text-align:center; margin-bottom:12px;">← Return to Mainframe Hub</a>
+
+        <div id="gatekeeperContainer" style="text-align:center;">
+            <input type="password" id="gatekeyField" placeholder="Provide root level security key token..." style="text-align:center;">
+            <button onclick="verifyRootSession()" style="background:#ff9e64; color:black;">AUTHORIZE ROOT SESSION</button>
+        </div>
+
+        <div id="adminMainframeContent" style="display:none;">
+            <div class="game-box" style="border-color:#38bdf8;">
+                <strong>Global Config Modifiers:</strong>
+                
+                <div style="margin-top:5px;">
+                    <button onclick="setGlobalSpeedModifier(2)" style="background:#bb9af7; color:black; font-size:11px; width:auto; padding:5px;">42. Trigger 2x Speed Event</button>
+                    <button onclick="setGlobalSpeedModifier(1)" style="background:#414868; font-size:11px; width:auto; padding:5px;">Reset Speeds</button>
+                </div>
+                
+                <button onclick="armGlobalAirdropSequence()" style="background:#2ea043; font-size:11px; margin-top:5px;">🎁 43. RUN CLASSROOM VOUCHER AIRDROP (+10M)</button>
+                
+                <button onclick="toggleSystemMaintenanceMode()" style="background:#f7768e; color:black; font-size:11px; margin-top:5px;">⚠️ 45. TOGGLE CLASSROOM MAINTENANCE MODE</button>
+                
+                <div style="margin-top:6px;">
+                    <input type="text" id="newsInput" placeholder="Write bulletin content alert strings..." style="font-size:11px; padding:5px;">
+                    <button onclick="pushBulletinText()" style="background:#7aa2f7; color:black; font-size:11px; margin:0; padding:4px;">Deploy Alert</button>
+                </div>
+
+                <div style="margin-top:8px;">
+                    <label style="font-size:11px; color:#e0af68;">25. Global Inflation Multiplier Control: </label>
+                    <select id="inflationKnob" onchange="tuneGlobalInflation(this.value)" style="font-size:11px; padding:3px; width:auto; margin:0;">
+                        <option value="1.0">1.0x (Standard Price)</option>
+                        <option value="1.5">1.5x (Inflated Markets)</option>
+                        <option value="2.0">2.0x (Hyper Inflation)</option>
+                    </select>
+                </div>
+
+                <div style="margin-top:8px;">
+                    <label style="font-size:11px; color:#ff79c6;">49. P2P Voucher Transfer Custom Tax Rate: </label>
+                    <select id="taxKnob" onchange="tuneCustomTaxRate(this.value)" style="font-size:11px; padding:3px; width:auto; margin:0;">
+                        <option value="0.00">0% Zero Tax</option>
+                        <option value="0.05">5% Fee Deduction</option>
+                        <option value="1.00">10% Maximum Friction</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="game-box" style="border-color:#238636;">
+                <strong>Token Registry Ingestion Array & 41. Audit Tool:</strong>
+                <input type="text" id="rawTokenIn" placeholder="Paste verification packet snapshot payload here..." style="margin-top:5px;">
+                <button onclick="processTokenIngestion()" style="background:#238636;">COMMIT TOKEN TO LEADBOARD REGISTER</button>
+                <div id="auditLogBox" style="font-size:11px; color:#f7768e; font-weight:bold; margin-top:4px; text-align:center;"></div>
+            </div>
+
+            <div class="game-box">
+                <strong>Target Override Modifiers:</strong>
+                <div class="flex-container" style="margin-top:5px;">
+                    <input type="text" id="modTargetUser" placeholder="User Name">
+                    <input type="number" id="modTargetAmt" placeholder="Amt Override">
+                    <button onclick="correctBalanceManual()" style="background:#e0af68; color:black; margin:0; font-size:11px;">44. Correct Bal</button>
+                </div>
+                <div style="margin-top:5px;" class="flex-container">
+                    <input type="text" id="banTargetUser" placeholder="Handle ID to black list completely">
+                    <button onclick="registerBlacklistBan()" style="background:#f7768e; margin:0; font-size:11px;">39. BAN USER PROFILE</button>
+                </div>
+            </div>
+
+            <div class="game-box">
+                <strong>Verified Classroom Standings Matrix Ledger:</strong>
+                <button onclick="runTopUserTaxCollection()" style="background:#ff79c6; color:black; font-size:10px; padding:3px; margin-top:4px; margin-bottom:5px;">26. Collect 1% Top-Player Community Wealth Tax</button>
+                <ol id="adminBoardRender" style="padding-left:20px; line-height:1.6; text-align:left;"></ol>
+            </div>
+
+            <div style="display:flex; gap:6px;">
+                <button onclick="extractMasterBackupFile()" style="background:#1f6feb; font-size:11px;">💾 50. DOWNLOAD STANDINGS BACKUP CODE</button>
+                <button onclick="wipeCloudLedgerArrays()" style="background:#f7768e; font-size:11px;">💥 47. RESET SEASONS MASTER REGISTRY</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let registryCloudData = JSON.parse(localStorage.getItem("mcoin_global_cloud_register")) || [];
+        function verifyRootSession() {
+            if(document.getElementById("gatekeyField").value === "mcoinroot") {
+                document.getElementById("gatekeeperContainer").style.display = "none";
+                document.getElementById("adminMainframeContent").style.display = "block";
+                drawAdminBoardView();
+            } else alert("Root sequence credentials invalid.");
+        }
+        function setGlobalSpeedModifier(v) { localStorage.setItem("mcoin_global_speed_multiplier", v); alert(`Admin state mapping updated. Speeds set to ${v}x`); }
+        function armGlobalAirdropSequence() { localStorage.setItem("mcoin_airdrop_broadcast", "true"); alert("AirDrop vector codes active across all terminal sessions."); }
+        function toggleSystemMaintenanceMode() {
+            let active = localStorage.getItem("mcoin_maintenance_active") === "true";
+            localStorage.setItem("mcoin_maintenance_active", !active); alert(`System lockout configuration matrix changed to: ${!active}`);
+        }
+        function pushBulletinText() {
+            let txt = document.getElementById("newsInput").value.trim();
+            if(txt) { localStorage.setItem("mcoin_broadcast_msg", txt); alert("News updated."); }
+        }
+        function tuneGlobalInflation(v) { localStorage.setItem("mcoin_global_inflation_mod", v); alert(`25. Inflation index calibrated to ${v}x product pricing.`); }
+        function tuneCustomTaxRate(v) { localStorage.setItem("mcoin_tax_rate", v); alert(`49. Custom outbound voucher tax cost set to ${v*100}%`); }
+
+        function processTokenIngestion() {
+            let raw = document.getElementById("rawTokenIn").value.trim();
+            let div = document.getElementById("auditLogBox"); div.innerText = "";
+            try {
+                let p = JSON.parse(atob(raw));
+                if(p.checksumSig !== "SHA-MCOIN-SECURE") throw new Error();
+
+                let banList = JSON.parse(localStorage.getItem("mcoin_blacklist_users")) || [];
+                if(banList.includes(p.user)) { div.innerText = "❌ BLOCK: Inbound package user signature matched blacklist records!"; return; }
+
+                let dynamicTrace = atob(p.trace);
+                let rateMatched = dynamicTrace.match(/RATE:([\d\.]+)/)[1];
+                if(parseFloat(rateMatched) !== parseFloat(p.rate)) {
+                    div.innerText = "🚨 FRAUD EXCEPTION DISCOVERED: Token production rates altered out of sync with history limits!";
+                    return;
+                }
+
+                let idx = registryCloudData.findIndex(x => x.name === p.user);
+                if(idx !== -1) {
+                    if(parseFloat(p.bal) > registryCloudData[idx].bal) registryCloudData[idx].bal = parseFloat(p.bal);
+                } else { registryCloudData.push({ name: p.user, bal: parseFloat(p.bal) }); }
+
+                registryCloudData.sort((a,b)=>b.bal - a.bal);
+                localStorage.setItem("mcoin_global_cloud_register", JSON.stringify(registryCloudData));
+                document.getElementById("rawTokenIn").value = ""; drawAdminBoardView();
+                alert("Token verification authenticated. Standings ledger updated successfully.");
+            } catch(e) { div.innerText = "❌ SECURITY FRAUD ERROR: Inbound structural validation check corrupted or edited."; }
+        }
+
+        function correctBalanceManual() {
+            let u = document.getElementById("modTargetUser").value.trim(), a = parseFloat(document.getElementById("modTargetAmt").value);
+            if(!u || isNaN(a)) return;
+            let idx = registryCloudData.findIndex(x => x.name === u);
+            if(idx !== -1) { registryCloudData[idx].bal += a; } else { registryCloudData.push({ name: u, bal: a }); }
+            registryCloudData.sort((a,b)=>b.bal - a.bal); localStorage.setItem("mcoin_global_cloud_register", JSON.stringify(registryCloudData));
+            drawAdminBoardView(); alert("Manual allocation parameter override pushed.");
+        }
+
+        function registerBlacklistBan() {
+            let u = document.getElementById("banTargetUser").value.trim(); if(!u) return;
+            let list = JSON.parse(localStorage.getItem("mcoin_blacklist_users")) || []; list.push(u);
+            localStorage.setItem("mcoin_blacklist_users", JSON.stringify(list));
+            registryCloudData = registryCloudData.filter(x => x.name !== u);
+            localStorage.setItem("mcoin_global_cloud_register", JSON.stringify(registryCloudData));
+            drawAdminBoardView(); alert(`User matrix handle profile "${u}" blacklisted from classroom structures.`);
+        }
+
+        function runTopUserTaxCollection() {
+            if(registryCloudData.length === 0) return alert("Register ledger is currently unpopulated.");
+            let topUserAmt = registryCloudData[0].bal;
+            let poolTaxed = topUserAmt * 0.01; registryCloudData[0].bal -= poolTaxed;
+            let currentPool = parseFloat(localStorage.getItem("mcoin_global_charity_pool")) || 0;
+            localStorage.setItem("mcoin_global_charity_pool", currentPool + poolTaxed);
+            localStorage.setItem("mcoin_global_cloud_register", JSON.stringify(registryCloudData));
+            drawAdminBoardView(); alert(`Tax processed! Deducted ${poolTaxed.toFixed(2)}M from top node. Deposited to 31. Public Charity Pool.`);
+        }
+
+        function drawAdminBoardView() {
+            let ol = document.getElementById("adminBoardRender"); ol.innerHTML = registryCloudData.length === 0 ? "<li>Registry unpopulated.</li>" : "";
+            registryCloudData.forEach((p,i) => {
+                let crown = i === 0 ? "👑 🥇 " : (i === 1 ? "🥈 " : (i === 2 ? "🥉 " : ""));
+                ol.innerHTML += `<li>${crown}<strong>${p.name}</strong> — ${p.bal.toFixed(4)} Mcoins</li>`;
+            });
+            localStorage.setItem("mcoin_public_top_three", JSON.stringify(registryCloudData.slice(0,3)));
+        }
+
+        function extractMasterBackupFile() {
+            let str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registryCloudData));
+            let anchor = document.createElement('a'); anchor.setAttribute("href", str); anchor.setAttribute("download", "mcoin_master_registry.json");
+            document.body.appendChild(anchor); anchor.click(); anchor.remove();
+        }
+        function wipeCloudLedgerArrays() { if(confirm("Execute full season database reset wipe?")) { registryCloudData=[]; localStorage.removeItem("mcoin_global_cloud_register"); localStorage.removeItem("mcoin_public_top_three"); drawAdminBoardView(); } }
+    </script>
+</body>
+</html>

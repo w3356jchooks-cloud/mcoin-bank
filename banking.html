@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Banking & Market</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card" style="border-color:#ff79c6;">
+        <h2>🏦 Central Financial Banking Complex (22-31)</h2>
+        <div class="balance-display" style="font-size:24px;"><span id="mainBal">0.0000</span> M</div>
+        <a href="index.html" style="color:#7aa2f7; text-decoration:none; font-size:13px; display:block; text-align:center; margin-bottom:12px;">← Return to Mainframe Hub</a>
+
+        <div class="game-box">
+            <h4 style="color:#ff79c6;">🔒 22. Long-Term Savings Escrow Vault</h4>
+            <p style="font-size:11px; color:#8b949e; margin:0 0 4px 0;">Locked Deposit Asset Balance: <span id="vaultVolume" style="color:#ff79c6; font-weight:bold;">0.00</span> M</p>
+            <div class="flex-container"><input type="number" id="vaultIn" placeholder="Quantity"><button onclick="depositVaultFunds()" style="background:#ff79c6; color:black;">DEPOSIT ESCROW</button></div>
+            <button onclick="releaseVaultEscrow()" style="background:#2ea043; margin-top:5px;">RECOVER ESCROW ASSETS (+5% COMPOUND COMPOUND)</button>
+        </div>
+
+        <div class="game-box" style="border-color:#f7768e;">
+            <h4 style="color:#f7768e;">⚠️ 23. Credit Line Debt Registry Office</h4>
+            <p style="font-size:11px; color:#8b949e; margin:0 0 2px 0;">Outstanding Debt Balances: <span id="debtVolume" style="color:#f7768e; font-weight:bold;">0.00</span> M</p>
+            <p style="font-size:11px; color:#9ece6a; margin:0 0 6px 0;">30. Credit Score Index Metric: <span id="creditScoreLabel" style="font-weight:bold;">100</span> points</p>
+            <button onclick="drawBankLoanCredit()" style="background:#f7768e; color:black;">DRAW 50.00 M IMMEDIATE CREDIT LINE</button>
+            <button onclick="liquidateBankLoanCredit()" style="background:#238636; margin-top:5px;">CLEAR BALANCES LEGALLY (-60.00 M Liability)</button>
+        </div>
+
+        <div class="game-box" style="border-color:#bb9af7;">
+            <h4 style="color:#bb9af7;">📊 24. Subject Fluctuation Stock Exchange Market</h4>
+            <p style="font-size:11px; color:#8b949e; margin:0 0 5px 0;">Science Innovation Core Index: <span id="stockIndexPrice" style="color:#bb9af7; font-weight:bold;">30.00</span> M | Shares Held: <span id="stockOwnedLabel" style="color:#e0af68;">0</span></p>
+            <div class="flex-container"><button onclick="tradeStockBlock('BUY')" style="background:#bb9af7; color:black;">ACQUIRE STOCK</button><button onclick="tradeStockBlock('SELL')" style="background:#414868;">LIQUIDATE STOCK</button></div>
+        </div>
+
+        <div class="game-box" style="border-color:#e0af68;">
+            <h4>🏆 31. Global Charity Pool Donation Board</h4>
+            <p style="font-size:11px; color:#8b949e; margin:0 0 5px 0;">Total Shared Wealth Endowed: <span id="charityTotalLabel" style="color:#e0af68; font-weight:bold;">0.00</span> Mcoins</p>
+            <div class="flex-container"><input type="number" id="charityInput" placeholder="Amount to Donate"><button onclick="executeCharityGift()" style="background:#e0af68; color:black;">DONATE CAPITALS</button></div>
+        </div>
+
+        <div class="card" style="margin-top:15px; background:#0d1117;">
+            <h5 style="margin:0 0 5px 0; color:#8b949e;">📑 27. Local Terminal Transaction Ledger Registry:</h5>
+            <div id="logTerminalDisplay" style="font-family:monospace; font-size:10px; color:#a9b1d6; line-height:1.4;">No actions logged inside current scope runtime.</div>
+        </div>
+    </div>
+    <script src="core.js"></script>
+    <script>
+        function depositVaultFunds() {
+            let a = parseFloat(document.getElementById("vaultIn").value);
+            if(isNaN(a) || a <= 0 || currentBalance < a) return alert("Validation tracking error: Account balance limits breached.");
+            currentBalance -= a;
+            let currentVault = parseFloat(localStorage.getItem("mcoin_vault_volume")) || 0;
+            localStorage.setItem("mcoin_vault_volume", currentVault + a);
+            localStorage.setItem("mcoin_vault_timestamp", Date.now());
+            writeState(); updateBankingView(); alert("Assets successfully locked in micro-vault architecture safely.");
+        }
+        function releaseVaultEscrow() {
+            let v = parseFloat(localStorage.getItem("mcoin_vault_volume")) || 0;
+            let t = parseInt(localStorage.getItem("mcoin_vault_timestamp")) || 0;
+            if(v <= 0) return alert("Escrow vault structural registries are blank.");
+            if(Date.now() - t < 86400000) {
+                if(!confirm("Alert: Early termination drops interest processing entirely. Recover principal only?")) return;
+                currentBalance += v;
+            } else {
+                currentBalance += (v * 1.05); alert("Escrow matured fully! 5% interest block processed.");
+            }
+            localStorage.setItem("mcoin_vault_volume", 0); writeState(); updateBankingView();
+        }
+        function drawBankLoanCredit() {
+            let d = parseFloat(localStorage.getItem("mcoin_debt_amt")) || 0;
+            if(d > 0) return alert("Credit profile blocked: Resolve outstanding balance debt logs first.");
+            currentBalance += 50; localStorage.setItem("mcoin_debt_amt", 60);
+            writeState(); updateBankingView(); alert("50M loan liquid asset injected into user registry profile configuration.");
+        }
+        function liquidateBankLoanCredit() {
+            let d = parseFloat(localStorage.getItem("mcoin_debt_amt")) || 0;
+            if(d <= 0) return alert("Clean record sheet verified. No debts listed.");
+            if(currentBalance < d) return alert("Transaction failed: Liquidation balance requirement gap detected.");
+            currentBalance -= d; localStorage.setItem("mcoin_debt_amt", 0);
+            let score = parseInt(localStorage.getItem("mcoin_credit_rating")) || 100;
+            localStorage.setItem("mcoin_credit_rating", score + 20);
+            writeState(); updateBankingView(); alert("Debts resolved legally. Credit score matrix tracking point updated.");
+        }
+        let liveStockPrice = 30.00;
+        setInterval(() => {
+            liveStockPrice += (Math.random() - 0.47) * 4; if(liveStockPrice < 2) liveStockPrice = 2;
+            let el = document.getElementById("stockIndexPrice"); if(el) el.innerText = liveStockPrice.toFixed(2);
+        }, 4000);
+        function tradeStockBlock(act) {
+            let shares = parseInt(localStorage.getItem("mcoin_shares_owned")) || 0;
+            let score = parseInt(localStorage.getItem("mcoin_credit_rating")) || 100;
+            if(act === "BUY") {
+                let cost = liveStockPrice; if(score >= 140) cost *= 0.95;
+                if(currentBalance < cost) return alert("Declined: Lack of sufficient wallet collateral.");
+                currentBalance -= cost; shares++;
+            } else {
+                if(shares <= 0) return alert("Asset structural holdings allocation field blank.");
+                currentBalance += liveStockPrice; shares--;
+            }
+            localStorage.setItem("mcoin_shares_owned", shares);
+            document.getElementById("stockOwnedLabel").innerText = shares; writeState();
+        }
+        function executeCharityGift() {
+            let a = parseFloat(document.getElementById("charityInput").value);
+            if(isNaN(a) || a <= 0 || currentBalance < a) return alert("Invalid donations parameter metrics.");
+            currentBalance -= a;
+            let pool = parseFloat(localStorage.getItem("mcoin_global_charity_pool")) || 0;
+            localStorage.setItem("mcoin_global_charity_pool", pool + a);
+            writeState(); updateBankingView(); alert("Wealth gift registered onto public global charity board ledger tracking system.");
+        }
+        function updateBankingView() {
+            document.getElementById("vaultVolume").innerText = (parseFloat(localStorage.getItem("mcoin_vault_volume")) || 0).toFixed(2);
+            document.getElementById("debtVolume").innerText = (parseFloat(localStorage.getItem("mcoin_debt_amt")) || 0).toFixed(2);
+            document.getElementById("creditScoreLabel").innerText = localStorage.getItem("mcoin_credit_rating") || 100;
+            document.getElementById("stockOwnedLabel").innerText = localStorage.getItem("mcoin_shares_owned") || 0;
+            document.getElementById("charityTotalLabel").innerText = (parseFloat(localStorage.getItem("mcoin_global_charity_pool")) || 0).toFixed(2);
+            let displayLogs = JSON.parse(localStorage.getItem("mcoin_tx_history_logs")) || [];
+            document.getElementById("logTerminalDisplay").innerHTML = displayLogs.length === 0 ? "Empty log parameters." : displayLogs.join("<br>");
+        }
+        document.addEventListener("DOMContentLoaded", () => { updateBankingView(); setInterval(updateBankingView, 2000); });
+    </script>
+</body>
+</html>

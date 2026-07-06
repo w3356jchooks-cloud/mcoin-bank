@@ -1,0 +1,20 @@
+:root { --bg: #0f111a; --card-bg: #161b22; --border: #30363d; --text: #e6edf3; --accent: #58a6ff; --rig-border: solid 1px var(--border); }
+body { background-color: var(--bg); color: var(--text); font-family: system-ui, sans-serif; padding: 15px; max-width: 650px; margin: 0 auto; text-align: center; transition: background 0.3s, color 0.3s; }
+.card { background-color: var(--card-bg); border: var(--rig-border); border-radius: 8px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: left; position: relative; }
+h1, h2, h3, h4 { margin-top: 0; color: var(--accent); text-align: center; }
+.balance-display { font-size: 34px; font-weight: bold; color: #58a6ff; margin: 10px 0; text-align: center; font-family: monospace; }
+button { background-color: #238636; color: white; border: 1px solid rgba(240,246,252,0.1); border-radius: 6px; padding: 10px; font-size: 14px; cursor: pointer; width: 100%; margin-bottom: 6px; font-weight: bold; }
+button:hover { filter: brightness(1.1); }
+button:disabled { background-color: #21262d; color: #8b949e; cursor: not-allowed; }
+input, textarea, select { width: 100%; padding: 10px; background-color: #0d1117; border: 1px solid var(--border); border-radius: 6px; color: var(--text); margin-bottom: 10px; box-sizing: border-box; }
+.nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+.nav-btn { background-color: #1f6feb; color: white; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; text-decoration: none; text-align: center; }
+.nav-btn.casino { background-color: #ff9e64; color: #0f111a; }
+.nav-btn.shop { background-color: #e0af68; color: #0f111a; }
+.nav-btn.bank { background-color: #ff79c6; color: #0f111a; }
+.nav-btn.admin { background-color: #414868; color: #c0caf5; grid-column: span 2; }
+.game-box { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 12px; margin-top: 10px; }
+.flex-container { display: flex; gap: 8px; align-items: center; }
+.flex-container input, .flex-container button, .flex-container select { flex: 1; margin-bottom: 0; }
+.badge { display: inline-block; background: #38bdf8; color: #0f111a; padding: 2px 6px; font-size: 11px; font-weight: bold; border-radius: 4px; margin: 2px; }
+.ticker { background: #1a1b26; padding: 6px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #e0af68; margin-bottom: 12px; }

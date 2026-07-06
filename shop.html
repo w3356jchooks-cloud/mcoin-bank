@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assembly Upgrade Shop</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card" style="border-color:#e0af68;">
+        <h2>🛒 Assembly Shop Ecosystem (11-21)</h2>
+        <div class="balance-display" style="font-size:24px;"><span id="mainBal">0.0000</span> M</div>
+        <a href="index.html" style="color:#7aa2f7; text-decoration:none; font-size:13px; display:block; text-align:center; margin-bottom:12px;">← Back to Hub Terminal</a>
+        
+        <div id="shopInterfacePayload"></div>
+    </div>
+    <script src="core.js"></script>
+    <script>
+        const catalogItems = [
+            { id: "gpu", name: "11. Advanced GPU Processor", desc: "Adds permanent +2.50 M/hour baseline data generation mapping loop.", baseCost: 50, addRate: 2.5, scale: 1.7, key: "c_gpu" },
+            { id: "fan", name: "12. Cooling Fan Systems", desc: "Mitigates simulated heating delays. Adds permanent +0.40 M/hour expansion.", baseCost: 10, addRate: 0.4, scale: 1.3, key: "c_fan" },
+            { id: "fiber", name: "13. Fiber-Optic Internet Cable", desc: "Reduces pipeline simulated latency. Yields permanent +1.20 M/hour runtime speed.", baseCost: 30, addRate: 1.2, scale: 1.5, key: "c_fiber" },
+            { id: "solar", name: "14. Solar Panel Power Grid", desc: "Lowers simulated maintenance overhead. Grants +1.00 M/hour yield rate.", baseCost: 20, addRate: 1.0, scale: 1.4, key: "c_solar" },
+            { id: "script", name: "15. Farming Automation Script", desc: "Background listener enhancement optimization module. Adds +2.00 M/hour boost.", baseCost: 60, addRate: 2.0, scale: 1.6, key: "c_script" },
+            { id: "quantum", name: "16. Quantum Processors", desc: "End-game multi-threaded computation core matrix. Injects massive +25.00 M/hour performance.", baseCost: 1200, addRate: 25.0, scale: 3.0, key: "c_quantum" },
+            { id: "ai", name: "17. AI Assistant Optimization", desc: "Intelligent autonomous neural load manager element. Adds permanent +4.50 M/hour throughput.", baseCost: 150, addRate: 4.5, scale: 1.9, key: "c_ai" },
+            { id: "nitrogen", name: "18. Liquid Nitrogen Overclocking", desc: "Volatile threshold loop expansion framework. High speed +9.00 M/hour yield execution output.", baseCost: 350, addRate: 9.0, scale: 2.2, key: "c_nitrogen" },
+            { id: "frame", name: "19. Custom Mining RIG Frames", desc: "Modifies framework cosmetic container display parameters visually. Adds +0.30 M/hour output.", baseCost: 15, addRate: 0.3, scale: 1.3, key: "c_frame" },
+            { id: "cloud", name: "21. Cloud Server Subscription", desc: "Establishes remote persistent tracking link connection nodes. Injects +7.00 M/hour permanent yield.", baseCost: 250, addRate: 7.0, scale: 2.0, key: "c_cloud" }
+        ];
+
+        function renderShopEcosystem() {
+            let targetDiv = document.getElementById("shopInterfacePayload"); targetDiv.innerHTML = "";
+            let capMax = parseInt(localStorage.getItem("mcoin_node_slots_max")) || 10;
+            let currentFitted = parseInt(localStorage.getItem("mcoin_total_fitted_hardware")) || 0;
+            let infLevel = parseFloat(localStorage.getItem("mcoin_global_inflation_mod")) || 1.0;
+
+            targetDiv.innerHTML += `
+                <div style="background:#21262d; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #ff79c6; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:12px;"><strong>20. Secondary Server Node</strong><br><span style="color:#8b949e;">Expands baseline fitted assembly item grid metrics (+10 item slots)</span></div>
+                    <button onclick="purchaseNodeExpansion()" style="width:auto; margin:0; font-size:12px; background:#ff79c6; color:black;">Cost: ${(150 * infLevel).toFixed(2)} M</button>
+                </div>
+                <p style="font-size:11px; text-align:center; color:#e0af68; font-weight:bold; margin-bottom:12px;">Hardware Core Allocations Fitted: ${currentFitted} / ${capMax} Slots Active</p>
+            `;
+
+            catalogItems.forEach(item => {
+                let cost = parseFloat(localStorage.getItem(item.key)) || item.baseCost;
+                let calculatedCost = cost * infLevel;
+                targetDiv.innerHTML += `
+                    <div style="background:#21262d; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; max-width:65%; text-align:left;"><strong>${item.name}</strong><br><span style="color:#8b949e;">${item.desc}</span></div>
+                        <button onclick="buyCatalogItem('${item.id}')" style="width:auto; margin:0; font-size:12px; background:#e0af68; color:black;">Cost: ${calculatedCost.toFixed(2)} M</button>
+                    </div>
+                `;
+            });
+        }
+
+        function purchaseNodeExpansion() {
+            let infLevel = parseFloat(localStorage.getItem("mcoin_global_inflation_mod")) || 1.0;
+            let finalPrice = 150 * infLevel;
+            if(currentBalance < finalPrice) return alert("Financial execution denied.");
+            currentBalance -= finalPrice;
+            let capMax = parseInt(localStorage.getItem("mcoin_node_slots_max")) || 10;
+            let currentFitted = parseInt(localStorage.getItem("mcoin_total_fitted_hardware")) || 0;
+            localStorage.setItem("mcoin_node_slots_max", capMax + 10);
+            
+            let spent = parseFloat(localStorage.getItem("mcoin_total_spent")) || 0;
+            localStorage.setItem("mcoin_total_spent", spent + finalPrice);
+
+            writeState(); renderShopEcosystem(); alert("Secondary computational backbone configured. +10 capacity slots added.");
+        }
+
+        function buyCatalogItem(id) {
+            let capMax = parseInt(localStorage.getItem("mcoin_node_slots_max")) || 10;
+            let currentFitted = parseInt(localStorage.getItem("mcoin_total_fitted_hardware")) || 0;
+            if(currentFitted >= capMax) return alert("Procurement halted: Physical chassis item node slots fully populated.");
+
+            let item = catalogItems.find(x => x.id === id);
+            let rawCost = parseFloat(localStorage.getItem(item.key)) || item.baseCost;
+            let infLevel = parseFloat(localStorage.getItem("mcoin_global_inflation_mod")) || 1.0;
+            let matrixPrice = rawCost * infLevel;
+
+            if(currentBalance >= matrixPrice) {
+                currentBalance -= matrixPrice;
+                customFarmingRate += item.addRate;
+                localStorage.setItem(item.key, (rawCost * item.scale).toFixed(2));
+                localStorage.setItem("mcoin_total_fitted_hardware", currentFitted + 1);
+                
+                let spent = parseFloat(localStorage.getItem("mcoin_total_spent")) || 0;
+                localStorage.setItem("mcoin_total_spent", spent + matrixPrice);
+
+                if(id === "frame") { document.documentElement.style.setProperty('--rig-border', 'double 4px #e0af68'); }
+
+                writeState(); renderShopEcosystem();
+                alert(`System deployment finalized: Purchased ${item.name}`);
+            } else alert("Insufficient liquid asset allocation inside registry framework storage.");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => { renderShopEcosystem(); });
+    </script>
+</body>
+</html>

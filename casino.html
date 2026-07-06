@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Casino Terminal</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card" style="border-color:#ff9e64;">
+        <h2>🎰 Arcade Active Gaming Arena</h2>
+        <div class="balance-display" style="font-size:24px;"><span id="mainBal">0.0000</span> M</div>
+        <a href="index.html" style="color:#7aa2f7; text-decoration:none; font-size:13px; display:block; margin-bottom:12px;">← Back to Mainframe Hub</a>
+
+        <div class="game-box" style="border-color:#e0af68;">
+            <h4>🎡 3. Lucky Wheel Spinner (1/hr Limit)</h4>
+            <button onclick="triggerWheelSpin()" style="background:#e0af68; color:black;">CYCLE ROUTINE MATRIX</button>
+            <div id="wheelDisplay" style="font-size:12px; font-weight:bold; color:#e0af68; text-align:center; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box">
+            <h4>🪙 1. Double-or-Nothing Coin Flip</h4>
+            <div class="flex-container"><input type="number" id="flipBet" placeholder="Bet Amt"><select id="flipSide"><option value="H">Heads</option><option value="T">Tails</option></select></div>
+            <button onclick="runCoinFlipGame()" style="background:#ff9e64; color:black; margin-top:5px;">EXECUTE HIGH-ODDS FLIP</button>
+            <div id="flipDisplay" style="font-size:12px; text-align:center; font-weight:bold; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box">
+            <h4>✊ 2. Fixed-Stake Bot RPS Combat</h4>
+            <select id="rpsChoice"><option value="R">Rock</option><option value="P">Paper</option><option value="S">Scissors</option></select>
+            <button onclick="runRpsGame()" style="background:#38bdf8; color:black; margin-top:5px;">FIRE THREAT ARRAYS (Cost: 2 M)</button>
+            <div id="rpsDisplay" style="font-size:12px; text-align:center; font-weight:bold; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box">
+            <h4>🔮 4. Oracle Numerical Guesser</h4>
+            <div class="flex-container"><button onclick="startOracleSession()" style="background:#414868; font-size:11px;">Pay 2M Fee</button><input type="number" id="guessInput" placeholder="1-10"><button onclick="submitOracleGuess()" id="guessBtn" disabled style="background:#bb9af7; color:black;">SUBMIT</button></div>
+            <div id="guessDisplay" style="font-size:12px; text-align:center; color:#bb9af7; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box">
+            <h4>🎲 5. High/Low Dice Craps Table</h4>
+            <div class="flex-container"><input type="number" id="crapsBet" placeholder="Bet Amt"><select id="crapsTarget"><option value="H">High (8-12)</option><option value="L">Low (2-6)</option></select></div>
+            <button onclick="runCrapsGame()" style="background:#f7768e; margin-top:5px;">ROLL PAIR OF DICE</button>
+            <div id="crapsDisplay" style="font-size:12px; text-align:center; font-weight:bold; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box">
+            <h4>🎟️ 6. Scratch Win Ticket Desk</h4>
+            <button onclick="buyScratchTicket()" style="background:#7aa2f7; color:black;">PURCHASE SCRATCHER CARD (-5.00 M)</button>
+            <div id="scratchDisplay" style="font-size:11px; font-family:monospace; text-align:center; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box">
+            <h4>🃏 7. Blackjack Mini (Bot Dealer Arena)</h4>
+            <div class="flex-container"><input type="number" id="bjBet" placeholder="Wager Amount"><button onclick="startBlackjackGame()" style="background:#2ea043; margin:0;">DEAL</button></div>
+            <div id="bjControl" style="display:none; margin-top:5px;" class="flex-container"><button onclick="hitBj()" style="background:#e0af68; color:black;">HIT</button><button onclick="standBj()" style="background:#f7768e;">STAND</button></div>
+            <div id="bjDisplay" style="font-size:12px; font-family:monospace; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box" style="border-color:#9ece6a;">
+            <h4>📈 8. Live Crypto Asset Terminal</h4>
+            <p style="font-size:11px; margin:0 0 5px 0; color:#8b949e;">Market Rate: <span id="cryptoPriceDisplay" style="color:#9ece6a; font-weight:bold;">10.00</span> M | Held Inventory: <span id="cryptoInventory" style="color:#58a6ff;">0</span> units</p>
+            <div class="flex-container"><button onclick="tradeCrypto('BUY')" style="background:#238636;">BUY ONE</button><button onclick="tradeCrypto('SELL')" style="background:#f7768e;">LIQUIDATE ONE</button></div>
+        </div>
+
+        <div class="game-box">
+            <h4>🍒 9. Classic Triple Emoji Slot Machine Matrix</h4>
+            <input type="number" id="slotsWager" placeholder="Stake Bet Quantity">
+            <button onclick="pullSlotsLever()" style="background:#ff9e64; color:black; margin-top:5px;">PULL MECHANICAL LEVER</button>
+            <div id="slotsDisplay" style="font-size:16px; font-weight:bold; letter-spacing:3px; text-align:center; margin-top:4px;"></div>
+        </div>
+
+        <div class="game-box" style="border-color:#bb9af7;">
+            <h4>🎟️ 10. Hourly Global Lottery Box Register</h4>
+            <p style="font-size:11px; color:#8b949e; margin:0 0 4px 0;">Purchased Ticket Indices: <span id="lotteryTicketsCount" style="color:#bb9af7;">0</span> registered</p>
+            <button onclick="buyLotteryTicket()" style="background:#bb9af7; color:black;">ACQUIRE DRAW TICKET (-2.00 M)</button>
+            <div id="lotteryDisplay" style="font-size:11px; text-align:center; margin-top:4px; font-weight:bold;"></div>
+        </div>
+    </div>
+
+    <script src="core.js"></script>
+    <script>
+        function triggerWheelSpin() {
+            let last = localStorage.getItem("mcoin_wheel_cooldown") || 0;
+            if(Date.now() - last < 3600000) return alert("Cooling parameters active: Maximum 1 mechanical cycle per hour.");
+            localStorage.setItem("mcoin_wheel_cooldown", Date.now());
+            let pool = ["+2M Payout", "+5M Mega Payout", "2x Boost (5min)", "0.5x Sluggish (5min)", "Null Sector Data"];
+            let res = pool[Math.floor(Math.random()*pool.length)];
+            if(res.includes("+2M")) currentBalance += 2;
+            if(res.includes("+5M")) currentBalance += 5;
+            if(res.includes("2x")) { localStorage.setItem("mcoin_mod_multiplier", 2); setTimeout(()=>localStorage.removeItem("mcoin_mod_multiplier"), 300000); }
+            if(res.includes("0.5x")) { localStorage.setItem("mcoin_mod_multiplier", 0.5); setTimeout(()=>localStorage.removeItem("mcoin_mod_multiplier"), 300000); }
+            document.getElementById("wheelDisplay").innerText = `🎰 Wheel Target Anchored: [ ${res} ]`; writeState();
+        }
+        function runCoinFlipGame() {
+            let b = parseFloat(document.getElementById("flipBet").value);
+            let s = document.getElementById("flipSide").value;
+            if(isNaN(b) || b <= 0 || currentBalance < b) return alert("Financial validation exception: Core balance insufficient.");
+            currentBalance -= b; let landing = Math.random() < 0.5 ? "H" : "T";
+            let div = document.getElementById("flipDisplay");
+            if(landing === s) { currentBalance += b*2; div.innerText = `🟢 WINNER! Landed ${landing}. Gained +${b}M`; div.style.color="#9ece6a"; }
+            else { div.innerText = `🔴 DEFEAT! Landed ${landing}. Lost -${b}M`; div.style.color="#f7768e"; }
+            writeState(); appendTxHistory(`Coin flip stake played: result ${landing}`);
+        }
+        function runRpsGame() {
+            if(currentBalance < 2) return alert("Asset collection failure: 2M entry bet required.");
+            currentBalance -= 2;
+            let moves = ["R", "P", "S"], bot = moves[Math.floor(Math.random()*3)], user = document.getElementById("rpsChoice").value;
+            let div = document.getElementById("rpsDisplay");
+            if(user === bot) { currentBalance += 2; div.innerText = `🤝 EQUAL LOAD! Choice matched bot ${bot}. Refunded 2M.`; div.style.color="#e0af68"; }
+            else if((user==="R" && bot==="S") || (user==="P" && bot==="R") || (user==="S" && bot==="P")) { currentBalance += 4; div.innerText = `🟢 WINNER! ${user} outpaced bot ${bot}. +4M`; div.style.color="#9ece6a"; }
+            else { div.innerText = `🔴 SYSTEM ERROR! Bot ${bot} crushed ${user}. -2M`; div.style.color="#f7768e"; }
+            writeState();
+        }
+        let sNum = 0, gLeft = 0;
+        function startOracleSession() {
+            if(currentBalance < 2) return alert("Insufficient balance mapping.");
+            currentBalance -= 2; sNum = Math.floor(Math.random()*10)+1; gLeft = 3;
+            document.getElementById("guessBtn").disabled = false;
+            document.getElementById("guessDisplay").innerText = "Oracle initialized. Guess number 1-10 [3 cycles remaining]"; writeState();
+        }
+        function submitOracleGuess() {
+            let g = parseInt(document.getElementById("guessInput").value), div = document.getElementById("guessDisplay"); gLeft--;
+            if(g === sNum) { currentBalance += 15; div.innerText = "🎯 MATRIX CRACKED! Numerical Jackpot +15.00 M!"; div.style.color="#9ece6a"; document.getElementById("guessBtn").disabled=true; }
+            else if(gLeft <= 0) { div.innerText = `💥 Core burned out. Correct signature was ${sNum}`; div.style.color="#f7768e"; document.getElementById("guessBtn").disabled=true; }
+            else { div.innerText = `Incorrect. Path index tracks ${g > sNum ? 'LOWER' : 'HIGHER'}. [${gLeft} left]`; div.style.color="#e0af68"; }
+            writeState();
+        }
+        function runCrapsGame() {
+            let b = parseFloat(document.getElementById("crapsBet").value), t = document.getElementById("crapsTarget").value;
+            if(isNaN(b) || b <= 0 || currentBalance < b) return alert("Validation tracking fault.");
+            currentBalance -= b; let r1 = Math.floor(Math.random()*6)+1, r2 = Math.floor(Math.random()*6)+1, tot = r1+r2;
+            let winCondition = (t === "H" && tot >= 8) || (t === "L" && tot <= 6);
+            let div = document.getElementById("crapsDisplay");
+            if(winCondition) { currentBalance += b*2; div.innerText = `🎲 Dice settled: ${r1} + ${r2} = ${tot}. Earned +${b*2}M`; div.style.color="#9ece6a"; }
+            else { div.innerText = `🎲 Dice settled: ${r1} + ${r2} = ${tot}. Forfeited -${b}M`; div.style.color="#f7768e"; }
+            writeState();
+        }
+        function buyScratchTicket() {
+            if(currentBalance < 5) return alert("Requires 5 Mcoins layout fee.");
+            currentBalance -= 5;
+            let arr = Array.from({length:3},()=>Math.floor(Math.random()*3)+1);
+            let div = document.getElementById("scratchDisplay");
+            let win = arr.every(x=>x===arr[0]);
+            div.innerText = `|| DATA SECTORS: [ ${arr[0]} ] [ ${arr[1]} ] [ ${arr[2]} ] ||\n`;
+            if(win) { currentBalance += 20; div.innerText += "🎉 COMPLETE ALIGNED CONFIGURATION! Gained +20.00 Mcoins"; div.style.color="#9ece6a"; }
+            else { div.innerText += "❌ Scanning fault: Array configurations inconsistent."; div.style.color="#8b949e"; }
+            writeState();
+        }
+        let pHand = [], dHand = [], bjWager = 0;
+        function getCardValue() { return Math.floor(Math.random()*10)+1; }
+        function checkHandSum(h) { return h.reduce((a,b)=>a+b,0); }
+        function startBlackjackGame() {
+            let b = parseFloat(document.getElementById("bjBet").value);
+            if(isNaN(b) || b <= 0 || currentBalance < b) return alert("Financial liquidity restriction check failed.");
+            currentBalance -= b; bjWager = b; pHand = [getCardValue(), getCardValue()]; dHand = [getCardValue()];
+            document.getElementById("bjControl").style.display = "flex"; updateBjLogs(""); writeState();
+        }
+        function updateBjLogs(status) {
+            let pSum = checkHandSum(pHand), dSum = checkHandSum(dHand);
+            document.getElementById("bjDisplay").innerText = `Your Array: ${JSON.stringify(pHand)} (Total: ${pSum})\nDealer Track: ${JSON.stringify(dHand)} (Total: ${dSum})\n${status}`;
+        }
+        function hitBj() {
+            pHand.push(getCardValue()); let pSum = checkHandSum(pHand);
+            if(pSum > 21) { updateBjLogs("💥 OVERFLOW BOUNDS! You busted. Dealer wins allocation."); document.getElementById("bjControl").style.display="none"; }
+            else { updateBjLogs(""); }
+        }
+        function standBj() {
+            document.getElementById("bjControl").style.display = "none";
+            while(checkHandSum(dHand) < 17) { dHand.push(getCardValue()); }
+            let pSum = checkHandSum(pHand), dSum = checkHandSum(dHand);
+            if(dSum > 21 || pSum > dSum) { currentBalance += bjWager*2; updateBjLogs("🟢 ALGORITHM WIN! Account credited."); }
+            else if(pSum === dSum) { currentBalance += bjWager; updateBjLogs("🤝 SYMMETRIC BALANCE STABILITY! Draw refund."); }
+            else { updateBjLogs("🔴 LOSS! Dealer processing logic proved superior."); }
+            writeState();
+        }
+        let liveCryptoPrice = 10.00;
+        setInterval(() => {
+            liveCryptoPrice += (Math.random() - 0.49) * 2; if(liveCryptoPrice < 1) liveCryptoPrice = 1;
+            let el = document.getElementById("cryptoPriceDisplay"); if(el) el.innerText = liveCryptoPrice.toFixed(2);
+        }, 5000);
+        function tradeCrypto(act) {
+            let held = parseInt(localStorage.getItem("mcoin_crypto_units")) || 0;
+            if(act === "BUY") {
+                if(currentBalance < liveCryptoPrice) return alert("Transaction processing lack of funds.");
+                currentBalance -= liveCryptoPrice; held++;
+            } else {
+                if(held <= 0) return alert("Inventory block allocation empty.");
+                currentBalance += liveCryptoPrice; held--;
+            }
+            localStorage.setItem("mcoin_crypto_units", held);
+            document.getElementById("cryptoInventory").innerText = held; writeState();
+        }
+        function pullSlotsLever() {
+            let b = parseFloat(document.getElementById("slotsWager").value);
+            if(isNaN(b) || b <= 0 || currentBalance < b) return alert("Wager payload values rejected.");
+            currentBalance -= b;
+            let symbols = ["🍒", "🪙", "💎", "💥"], s1 = symbols[Math.floor(Math.random()*4)], s2 = symbols[Math.floor(Math.random()*4)], s3 = symbols[Math.floor(Math.random()*4)];
+            let div = document.getElementById("slotsDisplay"); div.innerText = `[ ${s1} | ${s2} | ${s3} ]`;
+            if(s1===s2 && s2===s3) { let multi = s1 === "💎" ? 10 : 5; currentBalance += b * multi; div.innerText += `\n🎉 JACKPOT SEQUENCE COMPLETE! +${b*multi}M`; }
+            writeState();
+        }
+        function buyLotteryTicket() {
+            if(currentBalance < 2) return alert("Required: 2 Mcoins entry configuration ticket fee.");
+            currentBalance -= 2; let tCount = parseInt(localStorage.getItem("mcoin_lottery_tickets")) || 0;
+            tCount++; localStorage.setItem("mcoin_lottery_tickets", tCount);
+            document.getElementById("lotteryTicketsCount").innerText = tCount;
+            document.getElementById("lotteryDisplay").innerText = "Ticket logged into global indexing loop database."; writeState();
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("cryptoInventory").innerText = localStorage.getItem("mcoin_crypto_units") || 0;
+            document.getElementById("lotteryTicketsCount").innerText = localStorage.getItem("mcoin_lottery_tickets") || 0;
+        });
+    </script>
+</body>
+</html>
