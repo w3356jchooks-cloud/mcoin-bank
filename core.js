@@ -104,7 +104,7 @@ function evaluateRankProgressAndBadges() {
 
     if(pBoard) {
         let cachedTopThree = JSON.parse(localStorage.getItem("mcoin_public_top_three")) || [];
-        pBoard.innerHTML = cachedTopThree.length === 0 ? "No verified registers synced yet. Admin must verify packets." : cachedTopThree.map((x,i)=>`${i===0?'🥇':i===1?'🥈':'🥉'} <strong>${x.name}</strong>: ${parseFloat(x.bal).toFixed(2)} M`).join("<br>");
+        pBoard.innerHTML = cachedTopThree.length === 0 ? "<div id="liveCloudScores">Synchronizing with global matrix...</div>" : cachedTopThree.map((x,i)=>`${i===0?'🥇':i===1?'🥈':'🥉'} <strong>${x.name}</strong>: ${parseFloat(x.bal).toFixed(2)} M`).join("<br>");
     }
 }
 
