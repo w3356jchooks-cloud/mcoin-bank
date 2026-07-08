@@ -43,8 +43,8 @@
 
         <div class="card" style="border-color:#bb9af7;">
             <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6;">
-                <div id="liveCloudScores">Connecting to database terminal...</div>
+            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; min-height:60px;">
+                Connecting to global database matrix...
             </div>
         </div>
 
@@ -106,8 +106,32 @@
 
     <script>
         const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
+        const targetElement = document.getElementById("publicLeaderboard");
 
-        function sendDataToCloud() {
+        // Protect the element properties so core.js cannot change them
+        let realHTMLValue = targetElement.innerHTML;
+        Object.defineProperty(targetElement, 'innerHTML', {
+            get: function() { return realHTMLValue; },
+            set: function(val) {
+                // Only accept updates that contain live score structures, ignore offline resets
+                if (val.includes('🥈') || val.includes('🥇') || val.includes('Connecting')) {
+                    realHTMLValue = val;
+                    document.getElementById("publicLeaderboard").textContent = ""; 
+                    HTMLElement.prototype.removeAttribute.call(targetElement, 'innerText');
+                    // Render to the DOM interface safely
+                    Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML').set.call(targetElement, val);
+                }
+            },
+            configurable: false
+        });
+
+        Object.defineProperty(targetElement, 'innerText', {
+            get: function() { return targetElement.textContent; },
+            set: function(val) { /* Completely block plain text resets */ },
+            configurable: false
+        });
+
+        function sendSnapshotToCloud() {
             const userEl = document.getElementById('userLabel');
             const balEl = document.getElementById('mainBal');
             if (!userEl || !balEl) return;
@@ -127,13 +151,11 @@
             }
         }
 
-        function pullAndInjectStandings() {
+        function pullGlobalStandings() {
             fetch(`${FIREBASE_ENDPOINT}.json`)
                 .then(r => r.json())
                 .then(data => {
-                    // Inject directly into the dynamically rendered target to defeat core.js UI refreshes
-                    const targetEl = document.getElementById("liveCloudScores") || document.getElementById("publicLeaderboard");
-                    if (!targetEl || !data) return;
+                    if (!data) return;
 
                     let list = [];
                     Object.keys(data).forEach(k => {
@@ -159,29 +181,30 @@
                         rendered++;
                     });
 
-                    targetEl.innerHTML = html || "No verified registers synced yet.";
+                    if (html) {
+                        targetElement.innerHTML = html;
+                    }
                 })
                 .catch(() => {});
         }
 
         function commitUsernameWrapper() {
             if (typeof commitUsername === 'function') commitUsername();
-            setTimeout(sendDataToCloud, 400);
+            setTimeout(sendSnapshotToCloud, 400);
         }
         function issueVoucherWrapper() {
             if (typeof issueVoucherPayload === 'function') issueVoucherPayload();
-            setTimeout(sendDataToCloud, 400);
+            setTimeout(sendSnapshotToCloud, 400);
         }
         function claimVoucherWrapper() {
             if (typeof claimVoucherPayload === 'function') claimVoucherPayload();
-            setTimeout(sendDataToCloud, 400);
+            setTimeout(sendSnapshotToCloud, 400);
         }
 
-        // Fast intervals to ensure network updates write faster than any local tick routine
-        setInterval(sendDataToCloud, 5000);
-        setInterval(pullAndInjectStandings, 2000);
-        
-        setTimeout(pullAndInjectStandings, 400);
+        // Active background sync intervals
+        setInterval(sendSnapshotToCloud, 6000);
+        setInterval(pullGlobalStandings, 2500);
+        setTimeout(pullGlobalStandings, 500);
     </script>
 </body>
 </html>
