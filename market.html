@@ -13,7 +13,7 @@
             margin: 0;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
         header {
@@ -36,7 +36,7 @@
         
         .market-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 1fr 2.5fr;
             gap: 30px;
         }
         
@@ -96,6 +96,21 @@
             padding: 15px 12px;
             border-bottom: 1px solid #21262d;
             font-size: 14px;
+            vertical-align: middle;
+        }
+        .item-preview {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #30363d;
+            background-color: #0d1117;
+            display: block;
+        }
+        .item-info-cell {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         .buy-btn {
             background-color: #21262d;
@@ -146,6 +161,10 @@
                         <input type="text" id="item-name" placeholder="e.g., Rare Sprite Pack" required>
                     </div>
                     <div class="form-group">
+                        <label>Item Image URL (Optional)</label>
+                        <input type="url" id="item-image" placeholder="https://example.com/image.png">
+                    </div>
+                    <div class="form-group">
                         <label>Asking Price (in Mcoin)</label>
                         <input type="number" id="item-price" min="1" placeholder="e.g., 150" required>
                     </div>
@@ -158,8 +177,8 @@
                 <table class="listings-table">
                     <thead>
                         <tr>
+                            <th>Item Asset / Preview</th>
                             <th>Seller ID</th>
-                            <th>Item Asset</th>
                             <th>Cost</th>
                             <th>Action</th>
                         </tr>
@@ -171,6 +190,7 @@
         </div>
     </div>
 
+    <!-- Load Firebase Modules directly from CDN -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
@@ -200,9 +220,10 @@
             
             const seller = document.getElementById('seller-name').value;
             const item = document.getElementById('item-name').value;
+            const imgUrl = document.getElementById('item-image').value.trim(); // Stored as empty string if blank
             const price = parseInt(document.getElementById('item-price').value);
 
-            push(marketRef, { seller, item, price })
+            push(marketRef, { seller, item, imgUrl, price })
                 .then(() => {
                     document.getElementById('trade-form').reset();
                 })
@@ -226,9 +247,21 @@
             Object.keys(data).forEach((dbKey) => {
                 const trade = data[dbKey];
                 const row = document.createElement('tr');
+                
+                // Only generate image element HTML if an actual URL exists
+                let imgHtml = '';
+                if (trade.imgUrl && trade.imgUrl.trim() !== '') {
+                    imgHtml = `<img src="${escapeHTML(trade.imgUrl)}" class="item-preview" alt="Asset" onerror="this.style.display='none'">`;
+                }
+
                 row.innerHTML = `
+                    <td>
+                        <div class="item-info-cell">
+                            ${imgHtml}
+                            <span style="font-weight: bold; color: #c9d1d9;">${escapeHTML(trade.item)}</span>
+                        </div>
+                    </td>
                     <td style="color: #8b949e;">${escapeHTML(trade.seller)}</td>
-                    <td style="font-weight: bold; color: #c9d1d9;">${escapeHTML(trade.item)}</td>
                     <td style="color: #39d353; font-weight: bold;">${trade.price} MC</td>
                     <td><button class="buy-btn" data-key="${dbKey}" data-price="${trade.price}" data-item="${escapeHTML(trade.item)}" data-seller="${escapeHTML(trade.seller)}">BUY</button></td>
                 `;
