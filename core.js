@@ -114,11 +114,8 @@ function evaluateRankProgressAndBadges() {
 }
 
 // ========================================================
-// INTEGRATED CORES: IN-LINE REST LEADERBOARD ENGINE
 // ========================================================
-const LEADERBOARD_API_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
 
-window.broadcastToCloudREST = function() {
     // Check if the engine variables are fully loaded and assigned
     if (typeof username !== 'undefined' && typeof currentBalance !== 'undefined') {
         if (username && username !== "..." && username !== "Anonymous_Miner") {
@@ -134,7 +131,6 @@ window.broadcastToCloudREST = function() {
     }
 };
 
-window.fetchLeaderboardREST = function() {
     fetch(`${LEADERBOARD_API_ENDPOINT}.json`)
         .then(response => response.json())
         .then(data => {
@@ -179,8 +175,5 @@ window.fetchLeaderboardREST = function() {
 };
 
 // Hook into your core loops gently without disrupting your arithmetic timing
-setInterval(window.broadcastToCloudREST, 6000);
-setInterval(window.fetchLeaderboardREST, 4000);
 
 // Initialize a clean start fetch
-setTimeout(window.fetchLeaderboardREST, 1500);
