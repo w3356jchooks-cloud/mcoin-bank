@@ -5,6 +5,21 @@
     <title>Mcoin Hub Terminal</title><link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="publicLeaderboard" style="display:none !important; visibility:hidden !important;"></div>
+    <div id="firebaseLeaderboard" style="display:none !important; visibility:hidden !important;"></div>
+
+    <script>
+        // STEALTH INTERCEPTOR: Hijack DOM lookups before core.js can touch them
+        const nativeGetElementById = document.getElementById;
+        document.getElementById = function(id) {
+            if (id === "publicLeaderboard" || id === "firebaseLeaderboard") {
+                // Force return of our hidden decoy element
+                return nativeGetElementById.call(document, "publicLeaderboard");
+            }
+            return nativeGetElementById.call(document, id);
+        };
+    </script>
+
     <div id="maintBlock" style="display:none;" class="card"><h2 style="color:#f7768e;">⚙️ SERVER MAINTENANCE MODE ACTIVE</h2><p id="maintCtx" style="text-align:center; font-family:monospace;"></p></div>
 
     <div id="appContainer">
@@ -43,8 +58,8 @@
 
         <div class="card" style="border-color:#bb9af7;">
             <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; min-height:60px;">
-                Connecting to global database matrix...
+            <div id="trueCloudLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; min-height:60px;">
+                Establishing connection to global cloud array...
             </div>
         </div>
 
@@ -106,34 +121,10 @@
 
     <script>
         const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
-        const targetElement = document.getElementById("publicLeaderboard");
-
-        // Protect the element properties so core.js cannot change them
-        let realHTMLValue = targetElement.innerHTML;
-        Object.defineProperty(targetElement, 'innerHTML', {
-            get: function() { return realHTMLValue; },
-            set: function(val) {
-                // Only accept updates that contain live score structures, ignore offline resets
-                if (val.includes('🥈') || val.includes('🥇') || val.includes('Connecting')) {
-                    realHTMLValue = val;
-                    document.getElementById("publicLeaderboard").textContent = ""; 
-                    HTMLElement.prototype.removeAttribute.call(targetElement, 'innerText');
-                    // Render to the DOM interface safely
-                    Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML').set.call(targetElement, val);
-                }
-            },
-            configurable: false
-        });
-
-        Object.defineProperty(targetElement, 'innerText', {
-            get: function() { return targetElement.textContent; },
-            set: function(val) { /* Completely block plain text resets */ },
-            configurable: false
-        });
 
         function sendSnapshotToCloud() {
-            const userEl = document.getElementById('userLabel');
-            const balEl = document.getElementById('mainBal');
+            const userEl = nativeGetElementById.call(document, 'userLabel');
+            const balEl = nativeGetElementById.call(document, 'mainBal');
             if (!userEl || !balEl) return;
 
             let u = userEl.innerText.trim();
@@ -155,7 +146,9 @@
             fetch(`${FIREBASE_ENDPOINT}.json`)
                 .then(r => r.json())
                 .then(data => {
-                    if (!data) return;
+                    // Bypass lookup filter to render specifically to our secure target
+                    const display = nativeGetElementById.call(document, "trueCloudLeaderboard");
+                    if (!display || !data) return;
 
                     let list = [];
                     Object.keys(data).forEach(k => {
@@ -166,7 +159,7 @@
 
                     list.sort((a, b) => b.score - a.score);
 
-                    const userEl = document.getElementById('userLabel');
+                    const userEl = nativeGetElementById.call(document, 'userLabel');
                     let activeMe = userEl ? userEl.innerText.trim() : "...";
                     let html = "";
                     let rendered = 0;
@@ -181,9 +174,7 @@
                         rendered++;
                     });
 
-                    if (html) {
-                        targetElement.innerHTML = html;
-                    }
+                    display.innerHTML = html || "No verified registers synced yet.";
                 })
                 .catch(() => {});
         }
@@ -201,10 +192,10 @@
             setTimeout(sendSnapshotToCloud, 400);
         }
 
-        // Active background sync intervals
+        // Run sync loops completely isolated
         setInterval(sendSnapshotToCloud, 6000);
-        setInterval(pullGlobalStandings, 2500);
-        setTimeout(pullGlobalStandings, 500);
+        setInterval(pullGlobalStandings, 2000);
+        setTimeout(pullGlobalStandings, 400);
     </script>
 </body>
 </html>
