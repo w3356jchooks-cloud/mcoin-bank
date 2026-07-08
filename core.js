@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if(localStorage.getItem("mcoin_maintenance_active") === "true" && !window.location.pathname.includes("admin.html")) {
         let block = document.getElementById("maintBlock"); if(block) block.style.display = "block";
-        let contextMsg = document.getElementById("maintCtx"); if(contextMsg) contextMsg.innerText = localStorage.getItem("mcoin_broadcast_msg") || "Core update cycle in progress. Check back shortly.";
         let app = document.getElementById("appContainer"); if(app) app.style.display = "none";
     }
 
@@ -31,10 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("mcoin_balance", currentBalance.toFixed(4));
 
         let ticker = document.getElementById("bulletinTicker");
-        if(ticker) { ticker.innerText = "📢 " + (localStorage.getItem("mcoin_broadcast_msg") || "Welcome to the Classroom Mcoin Production Sandbox Ecosystem! Optimize your rig array nodes."); }
 
-        if(localStorage.getItem("mcoin_airdrop_broadcast") === "true") {
-            localStorage.removeItem("mcoin_airdrop_broadcast");
             currentBalance += 10.00; writeState(); alert("🎁 GLOBAL AIRDROP ENVELOPE REDEEMED: Your local node intercepted a +10.00 M classroom bonus allocation successfully!");
         }
 
@@ -106,7 +102,6 @@ function evaluateRankProgressAndBadges() {
 
     if(achList) achList.innerHTML = collectionMilestones.length === 0 ? "No computational milestones verified inside local terminal registries." : collectionMilestones.join("<br>");
 
-    let pBoard = document.getElementById("publicLeaderboard");
     if(pBoard) {
         let cachedTopThree = JSON.parse(localStorage.getItem("mcoin_public_top_three")) || [];
         pBoard.innerHTML = cachedTopThree.length === 0 ? "No verified registers synced yet. Admin must verify packets." : cachedTopThree.map((x,i)=>`${i===0?'🥇':i===1?'🥈':'🥉'} <strong>${x.name}</strong>: ${parseFloat(x.bal).toFixed(2)} M`).join("<br>");
@@ -121,7 +116,6 @@ function evaluateRankProgressAndBadges() {
         if (username && username !== "..." && username !== "Anonymous_Miner") {
             let sanitizedDatabaseKey = username.replace(/[^a-zA-Z0-9_]/g, "");
             if (sanitizedDatabaseKey.length >= 3) {
-                fetch(`${LEADERBOARD_API_ENDPOINT}/${sanitizedDatabaseKey}.json`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ score: parseFloat(currentBalance.toFixed(4)) })
@@ -131,10 +125,8 @@ function evaluateRankProgressAndBadges() {
     }
 };
 
-    fetch(`${LEADERBOARD_API_ENDPOINT}.json`)
         .then(response => response.json())
         .then(data => {
-            const displayBlock = document.getElementById("publicLeaderboard");
             if (!displayBlock) return;
 
             if (!data) {
@@ -169,11 +161,9 @@ function evaluateRankProgressAndBadges() {
             displayBlock.innerHTML = htmlOutput || "No verified registers synced yet.";
         })
         .catch(error => {
-            const displayBlock = document.getElementById("publicLeaderboard");
             if (displayBlock) displayBlock.innerText = "Standings server restricted (Local Sandbox Mode)";
         });
 };
 
 // Hook into your core loops gently without disrupting your arithmetic timing
 
-// Initialize a clean start fetch

@@ -41,12 +41,14 @@
             </select>
         </div>
 
-        <div id="publicLeaderboard" style="display:none;"></div>
+        <!-- DECOY DUMMY ELEMENT: core.js can write here all it wants; it's hidden and won't flash on screen -->
+        <div id="publicLeaderboard" style="display:none !important;"></div>
 
-        <div class="card" style="border-color:#bb9af7; background: rgba(26, 27, 41, 0.95); position: relative; z-index: 9999;">
+        <!-- THE TRUE LIVE GLOBAL LEADERBOARD: Completely disconnected from core.js -->
+        <div class="card" style="border-color:#bb9af7; background: rgba(26, 27, 41, 0.95);">
             <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="firebaseLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; color: #a9b1d6;">
-                Establishing secure cloud data link...
+            <div id="isolatedCloudLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; color: #a9b1d6;">
+                Connecting to global network...
             </div>
         </div>
 
@@ -104,61 +106,64 @@
     </a>
 </div>
 
+    <!-- 1. LOAD GAME ENGINE (NOW STRIPPED OF LEADERBOARD CODE) -->
     <script src="core.js"></script>
 
+    <!-- 2. INDEPENDENT NETWORK MANAGER (INDEX-ONLY) -->
     <script>
         const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
 
-        function pushIdentityToGlobalLedger() {
-            // Read from DOM explicitly to prevent variable scope race conditions
+        // Read DOM values directly so we don't care what variables core.js is changing internally
+        function syncSnapshotToCloud() {
             const userEl = document.getElementById('userLabel');
             const balEl = document.getElementById('mainBal');
             
             if (!userEl || !balEl) return;
-            let u = userEl.innerText.trim();
-            let b = parseFloat(balEl.innerText.trim());
+            let currentUsername = userEl.innerText.trim();
+            let currentBalance = parseFloat(balEl.innerText.trim());
 
-            if (u && u !== "..." && u !== "Anonymous_Miner" && !isNaN(b)) {
-                let cleanKey = u.replace(/[^a-zA-Z0-9_]/g, "");
+            if (currentUsername && currentUsername !== "..." && currentUsername !== "Anonymous_Miner" && !isNaN(currentBalance)) {
+                let cleanKey = currentUsername.replace(/[^a-zA-Z0-9_]/g, "");
                 if (cleanKey.length >= 3) {
                     fetch(`${FIREBASE_ENDPOINT}/${cleanKey}.json`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ score: parseFloat(b.toFixed(4)), lastSeen: Date.now() })
+                        body: JSON.stringify({ score: parseFloat(currentBalance.toFixed(4)), lastSeen: Date.now() })
                     }).catch(() => {});
                 }
             }
         }
 
-        function pullGlobalStandings() {
+        function fetchAndRenderGlobalStandings() {
             fetch(`${FIREBASE_ENDPOINT}.json`)
                 .then(r => r.json())
                 .then(data => {
-                    const display = document.getElementById("firebaseLeaderboard");
+                    const display = document.getElementById("isolatedCloudLeaderboard");
                     if (!display || !data) return;
 
-                    let sortedArray = [];
+                    let scoresArr = [];
                     Object.keys(data).forEach(k => {
                         if (data[k] && typeof data[k].score === 'number') {
-                            sortedArray.push({ name: k, score: data[k].score });
+                            scoresArr.push({ name: k, score: data[k].score });
                         }
                     });
 
-                    sortedArray.sort((a, b) => b.score - a.score);
+                    // Native browser sorting
+                    scoresArr.sort((a, b) => b.score - a.score);
 
                     const userEl = document.getElementById('userLabel');
-                    let activeMe = userEl ? userEl.innerText.trim() : "...";
+                    let myName = userEl ? userEl.innerText.trim() : "...";
                     let html = "";
-                    let rendered = 0;
+                    let totalRendered = 0;
 
-                    sortedArray.forEach(node => {
-                        if (rendered >= 3) return;
+                    scoresArr.forEach(node => {
+                        if (totalRendered >= 3) return;
                         if (node.name === "..." || node.name === "Anonymous_Miner") return;
 
-                        let medal = rendered === 0 ? "🥇" : rendered === 1 ? "🥈" : "🥉";
-                        let isMe = node.name === activeMe ? " <span style='color:#79c0ff;'>(You)</span>" : "";
+                        let medal = totalRendered === 0 ? "🥇" : totalRendered === 1 ? "🥈" : "🥉";
+                        let isMe = node.name === myName ? " <span style='color:#79c0ff;'>(You)</span>" : "";
                         html += `<div>${medal} <b>${node.name}</b>${isMe}: <span style="color:#39d353;">${node.score.toFixed(4)} M</span></div>`;
-                        rendered++;
+                        totalRendered++;
                     });
 
                     display.innerHTML = html || "No verified registers synced yet.";
@@ -166,33 +171,29 @@
                 .catch(() => {});
         }
 
+        // Intercept input actions to push states instantly
         function commitUsernameWrapper() {
-            let inputField = document.getElementById("usernameField");
-            if (inputField && inputField.value.trim().length >= 3) {
-                let cleanVal = inputField.value.trim().replace(/[^a-zA-Z0-9_]/g, "");
-                pushIdentityToGlobalLedger();
-            }
             if (typeof commitUsername === 'function') commitUsername();
-            setTimeout(pushIdentityToGlobalLedger, 500);
+            setTimeout(syncSnapshotToCloud, 500);
         }
 
         function issueVoucherWrapper() {
             if (typeof issueVoucherPayload === 'function') issueVoucherPayload();
-            setTimeout(pushIdentityToGlobalLedger, 500);
+            setTimeout(syncSnapshotToCloud, 500);
         }
 
         function claimVoucherWrapper() {
             if (typeof claimVoucherPayload === 'function') claimVoucherPayload();
-            setTimeout(pushIdentityToGlobalLedger, 500);
+            setTimeout(syncSnapshotToCloud, 500);
         }
 
-        // Independent, unaligned background syncing timers
-        setInterval(pushIdentityToGlobalLedger, 6000);
-        setInterval(pullGlobalStandings, 4000);
+        // Standalone independent background timers running completely isolated
+        setInterval(syncSnapshotToCloud, 7000);
+        setInterval(fetchAndRenderGlobalStandings, 4000);
         
-        // Immediate check-in sequences
-        setTimeout(pullGlobalStandings, 800);
-        setTimeout(pushIdentityToGlobalLedger, 1500);
+        // Initial execution frames
+        setTimeout(fetchAndRenderGlobalStandings, 500);
+        setTimeout(syncSnapshotToCloud, 1000);
     </script>
 </body>
 </html>
