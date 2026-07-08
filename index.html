@@ -41,11 +41,12 @@
             </select>
         </div>
 
-        <div class="card" style="border-color:#bb9af7;">
+        <div id="publicLeaderboard" style="display:none !important;"></div>
+        <div id="firebaseLeaderboard" style="display:none !important;"></div>
+
+        <div class="card" style="border-color:#bb9af7; min-height: 100px;">
             <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; min-height:60px;">
-                Connecting to cloud database...
-            </div>
+            <iframe src="leaderboard.html" style="width: 100%; height: 75px; border: none; background: transparent; overflow: hidden;" scrolling="no"></iframe>
         </div>
 
         <div class="card" style="border-color:#ff79c6;">
@@ -102,7 +103,7 @@
     </a>
 </div>
 
-    <script src="core.js"></script>
+    <script src="engine.js" onerror="this.src='core.js'"></script>
 
     <script>
         const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
@@ -127,42 +128,6 @@
             }
         }
 
-        function pullGlobalStandings() {
-            fetch(`${FIREBASE_ENDPOINT}.json`)
-                .then(r => r.json())
-                .then(data => {
-                    const display = document.getElementById("publicLeaderboard");
-                    if (!display || !data) return;
-
-                    let list = [];
-                    Object.keys(data).forEach(k => {
-                        if (data[k] && typeof data[k].score === 'number') {
-                            list.push({ name: k, score: data[k].score });
-                        }
-                    });
-
-                    list.sort((a, b) => b.score - a.score);
-
-                    const userEl = document.getElementById('userLabel');
-                    let activeMe = userEl ? userEl.innerText.trim() : "...";
-                    let html = "";
-                    let rendered = 0;
-
-                    list.forEach(node => {
-                        if (rendered >= 3) return;
-                        if (node.name === "..." || node.name === "Anonymous_Miner") return;
-
-                        let medal = rendered === 0 ? "🥇" : rendered === 1 ? "🥈" : "🥉";
-                        let isMe = node.name === activeMe ? " <span style='color:#79c0ff;'>(You)</span>" : "";
-                        html += `<div>${medal} <b>${node.name}</b>${isMe}: <span style="color:#39d353;">${node.score.toFixed(4)} M</span></div>`;
-                        rendered++;
-                    });
-
-                    if (html) display.innerHTML = html;
-                })
-                .catch(() => {});
-        }
-
         function commitUsernameWrapper() {
             if (typeof commitUsername === 'function') commitUsername();
             setTimeout(sendSnapshotToCloud, 400);
@@ -177,8 +142,7 @@
         }
 
         setInterval(sendSnapshotToCloud, 6000);
-        setInterval(pullGlobalStandings, 3000);
-        setTimeout(pullGlobalStandings, 500);
+        setTimeout(sendSnapshotToCloud, 1500);
     </script>
 </body>
 </html>

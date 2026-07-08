@@ -13,7 +13,6 @@
             line-height: 1.6;
         }
         .row { margin-bottom: 4px; }
-        .medal { margin-right: 4px; }
         .score { color: #39d353; font-weight: bold; }
         .me { color: #79c0ff; }
     </style>
@@ -25,7 +24,6 @@
         const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard.json";
 
         function updateGlobalLeaderboard() {
-            // Pull the user identity safely from the parent window's DOM
             let currentMe = "...";
             try {
                 if(window.parent && window.parent.document.getElementById('userLabel')) {
@@ -46,7 +44,6 @@
                         }
                     });
 
-                    // Sort descending cleanly inside the sandbox environment
                     list.sort((a, b) => b.score - a.score);
 
                     let html = "";
@@ -64,13 +61,10 @@
 
                     display.innerHTML = html || "No verified registers synced yet.";
                 })
-                .catch(() => {
-                    document.getElementById("display").innerText = "Standings server connection delayed...";
-                });
+                .catch(() => {});
         }
 
-        // Run sandbox synchronization updates every 4 seconds completely independently
-        setInterval(updateGlobalLeaderboard, 4000);
+        setInterval(updateGlobalLeaderboard, 3000);
         updateGlobalLeaderboard();
     </script>
 </body>
