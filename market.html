@@ -148,7 +148,7 @@
                 </small>
             </div>
             <div class="wallet-card">
-                Your Balance: <span class="wallet-amount" id="balance-display">1000</span> 🪙 MC
+                Your Balance: <span class="wallet-amount" id="balance-display">0.0000</span> 🪙 MC
             </div>
         </header>
 
@@ -198,7 +198,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
-        // Verified with your exact config screens
         const firebaseConfig = {
             apiKey: "AIzaSyCBa48LETDA6N1TgN6NhGHLSDEO2nSvfyY",
             authDomain: "mcoin-bank-market.firebaseapp.com",
@@ -214,9 +213,11 @@
         const db = getDatabase(app);
         const marketRef = ref(db, "open_trades");
 
-        let currentBalance = parseInt(localStorage.getItem('mcoin_balance')) || 1000;
+        let rawStorageValue = localStorage.getItem('mcoin_balance');
+        let currentBalance = (rawStorageValue !== null && !isNaN(parseFloat(rawStorageValue))) ? parseFloat(rawStorageValue) : 1000.0000;
+        
         localStorage.setItem('mcoin_balance', currentBalance);
-        document.getElementById('balance-display').innerText = currentBalance;
+        document.getElementById('balance-display').innerText = currentBalance.toFixed(4);
 
         const rememberedUser = localStorage.getItem('mcoin_market_username');
         if (rememberedUser) {
@@ -362,7 +363,7 @@
         });
 
         function executePurchase(dbKey, price, item, seller) {
-            let balance = parseInt(localStorage.getItem('mcoin_balance'));
+            let balance = parseFloat(localStorage.getItem('mcoin_balance'));
 
             if (balance < price) {
                 alert("❌ Transaction Failed: Insufficient Mcoin balance.");
@@ -371,7 +372,7 @@
 
             balance -= price;
             localStorage.setItem('mcoin_balance', balance);
-            document.getElementById('balance-display').innerText = balance;
+            document.getElementById('balance-display').innerText = balance.toFixed(4);
 
             const payoutRef = ref(db, `payouts/${seller}`);
             push(payoutRef, { amount: price, item: item })
@@ -403,10 +404,10 @@
                 });
 
                 if (totalIncome > 0) {
-                    let balance = parseInt(localStorage.getItem('mcoin_balance')) || 0;
+                    let balance = parseFloat(localStorage.getItem('mcoin_balance')) || 0;
                     balance += totalIncome;
                     localStorage.setItem('mcoin_balance', balance);
-                    document.getElementById('balance-display').innerText = balance;
+                    document.getElementById('balance-display').innerText = balance.toFixed(4);
 
                     alert(`💰 Income Alert! Your items (${itemsSold.join(', ')}) were purchased! +${totalIncome} Mcoin has been credited to your vault.`);
                 }
@@ -421,4 +422,3 @@
     </script>
 </body>
 </html>
-
