@@ -43,7 +43,7 @@
 
         <div class="card" style="border-color:#bb9af7;">
             <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6;">Loading standings ledger...</div>
+            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6;">Synchronizing cloud standings...</div>
         </div>
 
         <div class="card" style="border-color:#ff79c6;">
@@ -102,7 +102,7 @@
 
     <script src="core.js"></script>
     <script>
-        // Check for cross-page marketplace profiles cleanly
+        // Check for cross-page user linkages cleanly
         let savedMarketUser = localStorage.getItem('mcoin_market_username');
         if (savedMarketUser && savedMarketUser !== "Anonymous_Miner") {
             localStorage.setItem('mcoin_username', savedMarketUser);
@@ -116,10 +116,8 @@
             localStorage.setItem("mcoin_market_username", username); 
             syncMainframeView();
             
-            // Instantly sync up to Firebase safely upon clicking Save
-            if (typeof window.forceCloudSync === 'function') {
-                window.forceCloudSync();
-            }
+            // Call the engine's built-in cloud update directly
+            if (typeof broadcastToCloudREST === 'function') broadcastToCloudREST();
             appendTxHistory(`Changed device identity handle to "${username}"`);
         }
         function savePinSecurity() {
@@ -140,9 +138,7 @@
             if(!target || isNaN(amt) || amt <= 0 || currentBalance < totalCost || target === username) return alert("Security Engine Exception: Outbound resource parameters invalid.");
             currentBalance -= totalCost; writeState();
             
-            if (typeof window.forceCloudSync === 'function') {
-                window.forceCloudSync();
-            }
+            if (typeof broadcastToCloudREST === 'function') broadcastToCloudREST();
 
             let payload = {
                 sender: username, recipient: target, quantity: amt.toFixed(4),
@@ -169,9 +165,7 @@
                 history.push(d.txid); localStorage.setItem("mcoin_claimed_txid_ledger", JSON.stringify(history));
                 document.getElementById("p2pIn").value = ""; writeState();
                 
-                if (typeof window.forceCloudSync === 'function') {
-                    window.forceCloudSync();
-                }
+                if (typeof broadcastToCloudREST === 'function') broadcastToCloudREST();
                 appendTxHistory(`Claimed inbound wire assets matching index code ${d.txid} (+${d.quantity}M)`);
                 alert(`Inbound block verification finalized. Received +${parseFloat(d.quantity).toFixed(2)} Mcoins!`);
             } catch(e) { alert("Parsing processing unit exception: Data signature corrupted."); }
@@ -185,97 +179,6 @@
             };
             document.getElementById("cryptoSnapshotOut").value = btoa(JSON.stringify(dataPacket));
         }
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCBa48LETDA6N1TgN6NhGHLSDEO2nSvfyY",
-            authDomain: "mcoin-bank-market.firebaseapp.com",
-            databaseURL: "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "mcoin-bank-market",
-            storageBucket: "mcoin-bank-market.firebasestorage.app",
-            messagingSenderId: "402636863684",
-            appId: "1:402636863684:web:164bbf0e8781fa92c7c551",
-            measurementId: "G-8BENPQDSWX"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // Explicit transactional syncing method to fully avoid background timer blocks
-        window.forceCloudSync = function() {
-            const userLabelEl = document.getElementById('userLabel');
-            const mainBalEl = document.getElementById('mainBal');
-            
-            if (!userLabelEl || !mainBalEl) return;
-
-            let currentUserName = userLabelEl.innerText.trim();
-            let currentUserBal = parseFloat(mainBalEl.innerText.trim());
-
-            if (currentUserName && currentUserName !== "..." && currentUserName !== "Anonymous_Miner" && !isNaN(currentUserBal)) {
-                let cleanedPathName = currentUserName.replace(/[^a-zA-Z0-9_]/g, "");
-                if (cleanedPathName.length >= 3) {
-                    set(ref(db, `leaderboard/${cleanedPathName}`), {
-                        score: parseFloat(currentUserBal.toFixed(4))
-                    });
-                }
-            }
-        };
-
-        // Fire synchronization immediately after scripts are successfully allocated
-        setTimeout(window.forceCloudSync, 1000);
-        // Follow up with an extra update loop to account for slow mobile processing layouts
-        setTimeout(window.forceCloudSync, 3000);
-
-        // Fetch and handle global database matrix changes cleanly
-        const leaderboardRef = ref(db, "leaderboard");
-        onValue(leaderboardRef, (snapshot) => {
-            const data = snapshot.val();
-            const displayBlock = document.getElementById("publicLeaderboard");
-            if (!displayBlock) return;
-
-            if (!data) {
-                displayBlock.innerText = "No verified registers synced yet. Admin must verify packets.";
-                return;
-            }
-
-            let sortedList = [];
-            Object.keys(data).forEach(key => {
-                if (data[key] && typeof data[key].score === 'number') {
-                    sortedList.push({ name: key, score: data[key].score });
-                }
-            });
-            
-            sortedList.sort((a, b) => b.score - a.score);
-
-            const userLabelEl = document.getElementById('userLabel');
-            let monitoringUser = userLabelEl ? userLabelEl.innerText.trim() : "...";
-            
-            let htmlOutput = "";
-            let displayCount = 0;
-
-            sortedList.forEach((node) => {
-                if (displayCount >= 3) return;
-                
-                // Do not display raw, placeholder system labels in the visual top 3
-                if (node.name === "..." || node.name === "Anonymous_Miner") return;
-
-                let medal = displayCount === 0 ? "🥇" : displayCount === 1 ? "🥈" : "🥉";
-                let isMe = node.name === monitoringUser ? " <span style='color:#79c0ff;'>(You)</span>" : "";
-                
-                htmlOutput += `<div>${medal} <b>${node.name}</b>${isMe}: <span style="color:#39d353;">${node.score.toFixed(4)} M</span></div>`;
-                displayCount++;
-            });
-
-            if (htmlOutput === "") {
-                displayBlock.innerText = "No verified registers synced yet. Admin must verify packets.";
-            } else {
-                displayBlock.innerHTML = htmlOutput;
-            }
-        });
     </script>
 </body>
 </html>

@@ -112,3 +112,75 @@ function evaluateRankProgressAndBadges() {
         pBoard.innerHTML = cachedTopThree.length === 0 ? "No verified registers synced yet. Admin must verify packets." : cachedTopThree.map((x,i)=>`${i===0?'🥇':i===1?'🥈':'🥉'} <strong>${x.name}</strong>: ${parseFloat(x.bal).toFixed(2)} M`).join("<br>");
     }
 }
+
+// ========================================================
+// INTEGRATED CORES: IN-LINE REST LEADERBOARD ENGINE
+// ========================================================
+const LEADERBOARD_API_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
+
+window.broadcastToCloudREST = function() {
+    // Check if the engine variables are fully loaded and assigned
+    if (typeof username !== 'undefined' && typeof currentBalance !== 'undefined') {
+        if (username && username !== "..." && username !== "Anonymous_Miner") {
+            let sanitizedDatabaseKey = username.replace(/[^a-zA-Z0-9_]/g, "");
+            if (sanitizedDatabaseKey.length >= 3) {
+                fetch(`${LEADERBOARD_API_ENDPOINT}/${sanitizedDatabaseKey}.json`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ score: parseFloat(currentBalance.toFixed(4)) })
+                }).catch(err => console.log("Cloud request skipped in standalone offline sandbox."));
+            }
+        }
+    }
+};
+
+window.fetchLeaderboardREST = function() {
+    fetch(`${LEADERBOARD_API_ENDPOINT}.json`)
+        .then(response => response.json())
+        .then(data => {
+            const displayBlock = document.getElementById("publicLeaderboard");
+            if (!displayBlock) return;
+
+            if (!data) {
+                displayBlock.innerText = "No verified registers synced yet.";
+                return;
+            }
+
+            let sortedList = [];
+            Object.keys(data).forEach(key => {
+                if (data[key] && typeof data[key].score === 'number') {
+                    sortedList.push({ name: key, score: data[key].score });
+                }
+            });
+
+            sortedList.sort((a, b) => b.score - a.score);
+            let activeIdentity = typeof username !== 'undefined' ? username : "...";
+
+            let htmlOutput = "";
+            let itemsRendered = 0;
+
+            sortedList.forEach((node) => {
+                if (itemsRendered >= 3) return;
+                if (node.name === "..." || node.name === "Anonymous_Miner") return;
+
+                let medal = itemsRendered === 0 ? "🥇" : itemsRendered === 1 ? "🥈" : "🥉";
+                let isMe = node.name === activeIdentity ? " <span style='color:#79c0ff;'>(You)</span>" : "";
+
+                htmlOutput += `<div>${medal} <b>${node.name}</b>${isMe}: <span style="color:#39d353;">${node.score.toFixed(4)} M</span></div>`;
+                itemsRendered++;
+            });
+
+            displayBlock.innerHTML = htmlOutput || "No verified registers synced yet.";
+        })
+        .catch(error => {
+            const displayBlock = document.getElementById("publicLeaderboard");
+            if (displayBlock) displayBlock.innerText = "Standings server restricted (Local Sandbox Mode)";
+        });
+};
+
+// Hook into your core loops gently without disrupting your arithmetic timing
+setInterval(window.broadcastToCloudREST, 6000);
+setInterval(window.fetchLeaderboardREST, 4000);
+
+// Initialize a clean start fetch
+setTimeout(window.fetchLeaderboardREST, 1500);
