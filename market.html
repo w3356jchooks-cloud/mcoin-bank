@@ -68,7 +68,6 @@
             box-sizing: border-box;
             font-family: monospace;
         }
-        /* Custom styling for standard file input */
         input[type="file"] {
             color: #8b949e;
             font-size: 13px;
@@ -195,12 +194,11 @@
         </div>
     </div>
 
-    <!-- Load Firebase Modules directly from CDN -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
-        // Connected to Singapore Asia Node
+        // Verified with your exact config screens
         const firebaseConfig = {
             apiKey: "AIzaSyCBa48LETDA6N1TgN6NhGHLSDEO2nSvfyY",
             authDomain: "mcoin-bank-market.firebaseapp.com",
@@ -247,9 +245,8 @@
             submitBtn.innerText = "Processing Asset...";
             submitBtn.disabled = true;
 
-            let imgUrl = ""; // Stays empty if file skipped
+            let imgUrl = "";
 
-            // If a PNG/JPG is selected, compress and process it to base64 data URL
             if (fileInput.files && fileInput.files[0]) {
                 try {
                     imgUrl = await processFileAsBase64(fileInput.files[0]);
@@ -277,7 +274,6 @@
                 });
         });
 
-        // Function to read image file and compress it using standard browser canvas
         function processFileAsBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -289,7 +285,6 @@
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
-                        // Enforce max item asset box sizing (120x120 pixels max for rapid DB transfer)
                         const MAX_WIDTH = 120;
                         const MAX_HEIGHT = 120;
                         let width = img.width;
@@ -310,8 +305,6 @@
                         canvas.width = width;
                         canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Output as compressed JPEG data URL to keep DB payload minimal
                         resolve(canvas.toDataURL('image/jpeg', 0.7));
                     };
                     img.onerror = error => reject(error);
@@ -340,7 +333,6 @@
                 
                 let imgHtml = '';
                 if (trade.imgUrl && trade.imgUrl.trim() !== '') {
-                    // Safe injection of data URL strings directly into src attribute
                     imgHtml = `<img src="${trade.imgUrl}" class="item-preview" alt="Asset" onerror="this.style.display='none'">`;
                 }
 
