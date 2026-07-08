@@ -41,9 +41,13 @@
             </select>
         </div>
 
-        <div class="card" style="border-color:#bb9af7;">
+        <div id="publicLeaderboard" style="display:none;"></div>
+
+        <div class="card" style="border-color:#bb9af7; background: rgba(26, 27, 41, 0.95); position: relative; z-index: 9999;">
             <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6;">Establishing cloud link...</div>
+            <div id="firebaseLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; color: #a9b1d6;">
+                Initializing secure cloud data link...
+            </div>
         </div>
 
         <div class="card" style="border-color:#ff79c6;">
@@ -105,12 +109,10 @@
     <script>
         const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
 
-        // Safely push localized state variables out to the shared cloud database node
         function pushIdentityToGlobalLedger(customName, customBal) {
             let u = customName || (typeof username !== 'undefined' ? username : localStorage.getItem('mcoin_username'));
             let b = !isNaN(parseFloat(customBal)) ? parseFloat(customBal) : (typeof currentBalance !== 'undefined' ? currentBalance : parseFloat(localStorage.getItem('mcoin_balance') || 0));
 
-            // Prevent placeholder tags from writing blocks to the global index
             if (u && u !== "..." && u !== "Anonymous_Miner" && !isNaN(b)) {
                 let cleanKey = u.replace(/[^a-zA-Z0-9_]/g, "");
                 if (cleanKey.length >= 3) {
@@ -118,17 +120,17 @@
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ score: parseFloat(b.toFixed(4)), lastSeen: Date.now() })
-                    }).catch(e => console.log("Sync payload dropped by offline state wrapper configuration."));
+                    }).catch(e => console.log("Sync dropped."));
                 }
             }
         }
 
-        // Pull entire cloud state ledger and execute zero-delay client-side structural sorting
         function pullGlobalStandings() {
             fetch(`${FIREBASE_ENDPOINT}.json`)
                 .then(r => r.json())
                 .then(data => {
-                    const display = document.getElementById("publicLeaderboard");
+                    // Update our protected container that core.js doesn't access
+                    const display = document.getElementById("firebaseLeaderboard");
                     if (!display) return;
                     if (!data) { display.innerText = "No verified registers synced yet."; return; }
 
@@ -139,7 +141,6 @@
                         }
                     });
 
-                    // Explicit Client-Side Numeric Sort (Highest score descends to index 0)
                     sortedArray.sort((a, b) => b.score - a.score);
 
                     let activeMe = typeof username !== 'undefined' ? username : (localStorage.getItem('mcoin_username') || "...");
@@ -159,12 +160,11 @@
                     display.innerHTML = html || "No verified registers synced yet.";
                 })
                 .catch(() => {
-                    const display = document.getElementById("publicLeaderboard");
-                    if (display) display.innerText = "Standings server connection delayed...";
+                    const display = document.getElementById("firebaseLeaderboard");
+                    if (display) display.innerText = "Cloud server connection tracking...";
                 });
         }
 
-        // Action wrappers to lock values in place before local memory blocks can interfere
         function commitUsernameWrapper() {
             let inputField = document.getElementById("usernameField");
             if (inputField && inputField.value.trim().length >= 3) {
@@ -184,13 +184,10 @@
             setTimeout(() => pushIdentityToGlobalLedger(), 150);
         }
 
-        // Non-blocking loop threads running detached from core.js tick structures
-        setInterval(() => {
-            pushIdentityToGlobalLedger();
-        }, 7000);
-
-        setInterval(pullGlobalStandings, 4000);
-        setTimeout(pullGlobalStandings, 1000);
+        // Run updates entirely outside of core.js memory space
+        setInterval(pushIdentityToGlobalLedger, 5000);
+        setInterval(pullGlobalStandings, 3000);
+        setTimeout(pullGlobalStandings, 500);
     </script>
 </body>
 </html>
