@@ -1,167 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mcoin Hub Terminal</title><link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mcoin Bank & Miner</title>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            border-bottom: 2px solid #30363d;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { color: #58a6ff; margin: 0; }
+        .nav-links a {
+            color: #58a6ff;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 30px;
+        }
+        .panel {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        h2 { color: #f2c744; margin-top: 0; font-size: 18px; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+        .balance {
+            font-size: 32px;
+            color: #39d353;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        button {
+            background-color: #238636;
+            color: white;
+            border: 1px solid #2ea44f;
+            padding: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: monospace;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover { background-color: #2ea44f; }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+            margin-top: 5px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .leaderboard-table th {
+            text-align: left;
+            color: #8b949e;
+            font-size: 12px;
+            padding: 8px;
+            border-bottom: 2px solid #30363d;
+        }
+        .leaderboard-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #21262d;
+            font-size: 14px;
+        }
+        .rank-highlight { color: #f2c744; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <div id="maintBlock" style="display:none;" class="card"><h2 style="color:#f7768e;">⚙️ SERVER MAINTENANCE MODE ACTIVE</h2><p id="maintCtx" style="text-align:center; font-family:monospace;"></p></div>
-    
-    <div id="appContainer">
-        <div class="ticker"><marquee id="bulletinTicker">📢 Loading classroom mainframe broadcast array...</marquee></div>
 
-        <div class="card">
-            <h2>Mcoin Central Hub 🔒</h2>
-            
-            <div style="background:#1a1b26; padding:8px; border-radius:6px; margin-bottom:10px; border:1px dashed #414868;">
-                <div class="flex-container">
-                    <input type="password" id="pinField" maxlength="4" placeholder="Enter 4-Digit Security PIN" style="font-size:12px;">
-                    <button onclick="savePinSecurity()" style="width:auto; background:#414868; font-size:12px;">Lock Account State</button>
+    <div class="container">
+        <header>
+            <div>
+                <h1>🪙 Mcoin Miner Node Dashboard</h1>
+                <small style="color: #8b949e;">Multiplayer Cloud Account Network</small>
+            </div>
+            <div class="nav-links">
+                <a href="market.html">🛒 Open P2P Market</a>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div>
+                <div class="panel">
+                    <h2>👤 Identity Profile</h2>
+                    <label style="font-size: 12px; color: #8b949e;">Set Leaderboard Username:</label>
+                    <input type="text" id="username-input" placeholder="Enter custom player name...">
+                </div>
+
+                <div class="panel">
+                    <h2>⛏️ Local Node Core Miner</h2>
+                    <div class="balance"><span id="balance-display">0.0000</span> MC</div>
+                    <button id="mine-btn">COMPUTE COIN BLOCK</button>
                 </div>
             </div>
 
-            <div class="flex-container">
-                <input type="text" id="usernameField" placeholder="Set Handle Name...">
-                <button onclick="commitUsername()" style="width:auto; background:#1f6feb;">Save Identity</button>
+            <div>
+                <div class="panel">
+                    <h2>🏆 Live Global Leaderboard</h2>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">Rank</th>
+                                <th>Miner / Handle</th>
+                                <th style="text-align: right;">Net Worth</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-rows">
+                            <tr>
+                                <td colspan="3" style="color:#8b949e; font-style:italic; text-align:center; padding: 20px;">
+                                    Syncing node indices...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            
-            <p style="margin:8px 0; font-size:13px;">Miner Signature: <span id="userLabel" style="color:#79c0ff; font-weight:bold;">...</span> | Current Tier: <span id="tierLabel" style="color:#bb9af7; font-weight:bold;">Novice</span></p>
-            <div id="badgeDock"></div>
-
-            <div class="balance-display"><span id="mainBal">0.0000</span> M</div>
-            <p style="font-size:12px; color:#8b949e; text-align:center; margin:0;">Generation Performance Yield: <span id="rateLabel">0.00</span> M/hour</p>
-        </div>
-
-        <div class="card">
-            <h3>🎨 Personalization Interface Matrix</h3>
-            <select id="themeSelector" onchange="applyUserThemeConfig(this.value)">
-                <option value="dark">Standard Carbon Dark</option>
-                <option value="matrix">Neon Green Matrix</option>
-                <option value="purple">Vibrant Neon Purple</option>
-            </select>
-        </div>
-
-        <div class="card" style="border-color:#bb9af7;">
-            <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6;">Loading standings ledger...</div>
-        </div>
-
-        <div class="card" style="border-color:#ff79c6;">
-            <h3>💸 Escrow Core Transfer Deck</h3>
-            <div class="flex-container">
-                <input type="text" id="p2pTarget" placeholder="Target Handle">
-                <input type="number" id="p2pAmt" placeholder="Mcoin Quantity">
-            </div>
-            <div style="font-size:11px; color:#8b949e; margin:6px 0;">
-                <input type="checkbox" id="p2pInsurance" style="width:auto; margin:0;"> Enable Voucher Anti-Typo Insurance (+0.10 M fee protection)
-            </div>
-            <button onclick="issueVoucherPayload()" style="background:#ff79c6; color:black;">SIGN VERIFIED OUTBOUND VOUCHER</button>
-            <textarea id="p2pBoxOut" rows="1" readonly style="font-family:monospace; font-size:10px; margin-top:5px;" placeholder="Output secure payload string..."></textarea>
-            <hr style="border:0; border-top:1px dashed #30363d; margin:10px 0;">
-            <input type="text" id="p2pIn" placeholder="Paste incoming authorization voucher token...">
-            <button onclick="claimVoucherPayload()" style="background:#238636;">CLAIM INCOMING VOUCHER ENTRY</button>
-        </div>
-
-        <div class="card">
-            <h3>🏆 Completed Structural Milestones</h3>
-            <div id="achievementsContainer" style="font-size:12px; line-height:1.5; color:#a9b1d6;"></div>
-        </div>
-
-        <div class="card">
-            <h3>📤 Export High Score Snapshot</h3>
-            <button onclick="generateSecureVerificationPacket()" style="background:#1f6feb;">GENERATE SECURE VERIFICATION PACKET</button>
-            <textarea id="cryptoSnapshotOut" rows="1" readonly style="font-family:monospace; font-size:11px;"></textarea>
-        </div>
-
-        <div class="nav-grid">            <a href="casino.html" class="nav-btn casino">🎰 Arcade Casino</a>
-            <a href="casino.html" class="nav-btn casino">🎰 Arcade Casino</a>
-            <a href="shop.html" class="nav-btn shop">🛒 Hardware Shop</a>
-            <a href="banking.html" class="nav-btn bank">🏦 Banking Vault</a>
-            <a href="admin.html" class="nav-btn admin">👑 Admin Master Control</a>
         </div>
     </div>
 
-<div style="margin: 20px 0; text-align: center;">
-    <a href="market.html" style="
-        display: inline-block;
-        background-color: #238636;
-        color: #ffffff;
-        border: 1px solid #2ea44f;
-        padding: 12px 24px;
-        font-family: 'Courier New', monospace;
-        font-size: 16px;
-        font-weight: bold;
-        text-decoration: none;
-        border-radius: 6px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: background-color 0.2s;
-    " onmouseover="this.style.backgroundColor='#2ea44f'" onmouseout="this.style.backgroundColor='#238636'">
-        🛒 Enter P2P Trade Hall
-    </a>
-</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
-    <script src="core.js"></script>
-    <script>
-        function commitUsername() {
-            let v = document.getElementById("usernameField").value.trim().replace(/[^a-zA-Z0-9_]/g, "");
-            if(v.length < 3) return alert("Username restriction rule: Minimum 3 alphanumeric characters.");
-            username = v; localStorage.setItem("mcoin_username", username); syncMainframeView();
-            appendTxHistory(`Changed device identity handle to "${username}"`);
-        }
-        function savePinSecurity() {
-            let pin = document.getElementById("pinField").value;
-            if(!/^\d{4}$/.test(pin)) return alert("Security Lock error: PIN code blueprint must be exactly 4 numeric digits.");
-            localStorage.setItem("mcoin_pin", pin); alert("Device storage snapshot state locked with custom PIN security sequence.");
-        }
-        function applyUserThemeConfig(m) { localStorage.setItem("mcoin_theme", m); runThemeCSSMapping(m); }
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBa48LETDA6N1TgN6NhGHLSDEO2nSvfyY",
+            authDomain: "mcoin-bank-market.firebaseapp.com",
+            databaseURL: "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mcoin-bank-market",
+            storageBucket: "mcoin-bank-market.firebasestorage.app",
+            messagingSenderId: "402636863684",
+            appId: "1:402636863684:web:164bbf0e8781fa92c7c551",
+            measurementId: "G-8BENPQDSWX"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Track and format the local balance engine
+        let rawStorageValue = localStorage.getItem('mcoin_balance');
+        let balance = (rawStorageValue !== null && !isNaN(parseFloat(rawStorageValue))) ? parseFloat(rawStorageValue) : 1000.0000;
         
-        function issueVoucherPayload() {
-            let target = document.getElementById("p2pTarget").value.trim();
-            let amt = parseFloat(document.getElementById("p2pAmt").value);
-            let ins = document.getElementById("p2pInsurance").checked;
-            let taxRate = parseFloat(localStorage.getItem("mcoin_tax_rate")) || 0.00;
-            let fee = ins ? 0.10 : 0.00;
-            let totalCost = amt + fee + (amt * taxRate);
+        // Match market memory key for cross-page persistence
+        let username = localStorage.getItem('mcoin_market_username') || "Anonymous_Miner";
+        
+        document.getElementById('balance-display').innerText = balance.toFixed(4);
+        document.getElementById('username-input').value = username;
 
-            if(!target || isNaN(amt) || amt <= 0 || currentBalance < totalCost || target === username) return alert("Security Engine Exception: Outbound resource parameters invalid.");
-            currentBalance -= totalCost; writeState();
-
-            let payload = {
-                sender: username, recipient: target, quantity: amt.toFixed(4),
-                txid: "TX-" + Math.random().toString(36).substring(2,9).toUpperCase(),
-                timestamp: Date.now(), insured: ins, signatureToken: "MCOIN_CRYPT_SECURE"
-            };
-            document.getElementById("p2pBoxOut").value = btoa(JSON.stringify(payload));
-            appendTxHistory(`Generated transfer voucher code targeting ${target} for ${amt.toFixed(2)}M`);
+        // Function to push latest mining data to global database rankings
+        function syncBalanceToLeaderboard() {
+            if (username.trim() !== "" && username !== "Anonymous_Miner") {
+                const minerRef = ref(db, `leaderboard/${username}`);
+                set(minerRef, {
+                    score: parseFloat(balance.toFixed(4))
+                });
+            }
         }
 
-        function claimVoucherPayload() {
-            let raw = document.getElementById("p2pIn").value.trim();
-            try {
-                let d = JSON.parse(atob(raw));
-                if(d.signatureToken !== "MCOIN_CRYPT_SECURE") return alert("Signature matching array broken: Invalid certificate.");
-                if(d.recipient !== username) return alert(`Recipient Exception: Voucher is securely assigned to address context "${d.recipient}".`);
+        // Run an initial broadcast so the player shows up when logging in
+        syncBalanceToLeaderboard();
+
+        // Handle profile username alterations
+        document.getElementById('username-input').addEventListener('input', (e) => {
+            const newName = e.target.value.trim();
+            if (newName) {
+                username = newName;
+                localStorage.setItem('mcoin_market_username', username);
+                syncBalanceToLeaderboard();
+            }
+        });
+
+        // Mine button routine
+        document.getElementById('mine-btn').addEventListener('click', () => {
+            // Generate standard fractional block reward increment
+            balance += (Math.random() * 0.05) + 0.01;
+            localStorage.setItem('mcoin_balance', balance);
+            document.getElementById('balance-display').innerText = balance.toFixed(4);
+            
+            // Push calculation block instantly to everyone else's screen globally
+            syncBalanceToLeaderboard();
+        });
+
+        // Watch global ranking network array updates real-time
+        const leaderboardRef = ref(db, "leaderboard");
+        onValue(leaderboardRef, (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('leaderboard-rows');
+            container.innerHTML = '';
+
+            if (!data) {
+                container.innerHTML = `<tr><td colspan="3" style="color:#8b949e; text-align:center;">No active blocks detected. Start mining to claim rank #1!</td></tr>`;
+                return;
+            }
+
+            // Convert map to sorted list structure
+            let items = [];
+            Object.keys(data).forEach(key => {
+                items.push({ name: key, score: data[key].score });
+            });
+
+            // Sort highest balance down to lowest balance
+            items.sort((a, b) => b.score - a.score);
+
+            // Render top players
+            items.forEach((player, index) => {
+                const row = document.createElement('tr');
+                let rankDisplay = index + 1;
                 
-                if(Date.now() - d.timestamp > 1800000) return alert("Transaction Denied: 30-minute validation lifespan threshold expired.");
+                // Add stylized crowns or tags to podium ranks
+                if (rankDisplay === 1) rankDisplay = "🥇";
+                else if (rankDisplay === 2) rankDisplay = "🥈";
+                else if (rankDisplay === 3) rankDisplay = "🥉";
 
-                let history = JSON.parse(localStorage.getItem("mcoin_claimed_txid_ledger")) || [];
-                if(history.includes(d.txid)) return alert("Replay attack caught: This block transaction token has already been claimed.");
+                row.innerHTML = `
+                    <td class="rank-highlight">${rankDisplay}</td>
+                    <td style="color: ${player.name === username ? '#58a6ff' : '#c9d1d9'}; font-weight: ${player.name === username ? 'bold' : 'normal'}">
+                        ${escapeHTML(player.name)} ${player.name === username ? '<small>(You)</small>' : ''}
+                    </td>
+                    <td style="text-align: right; color: #39d353; font-weight: bold;">${player.score.toFixed(4)} MC</td>
+                `;
+                container.appendChild(row);
+            });
+        });
 
-                currentBalance += parseFloat(d.quantity);
-                history.push(d.txid); localStorage.setItem("mcoin_claimed_txid_ledger", JSON.stringify(history));
-                document.getElementById("p2pIn").value = ""; writeState();
-                appendTxHistory(`Claimed inbound wire assets matching index code ${d.txid} (+${d.quantity}M)`);
-                alert(`Inbound block verification finalized. Received +${parseFloat(d.quantity).toFixed(2)} Mcoins!`);
-            } catch(e) { alert("Parsing processing unit exception: Data signature corrupted."); }
-        }
-
-        function generateSecureVerificationPacket() {
-            let auditTraceCode = btoa(`RATE:${customFarmingRate.toFixed(2)}|COSTS:${localStorage.getItem("mcoin_total_spent")||0}`);
-            let dataPacket = {
-                user: username, bal: currentBalance.toFixed(4), rate: customFarmingRate.toFixed(2),
-                trace: auditTraceCode, timestamp: Date.now(), checksumSig: "SHA-MCOIN-SECURE"
-            };
-            document.getElementById("cryptoSnapshotOut").value = btoa(JSON.stringify(dataPacket));
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
         }
     </script>
 </body>
