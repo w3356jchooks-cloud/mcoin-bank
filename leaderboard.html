@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: transparent;
+            margin: 0;
+            padding: 0;
+            color: #a9b1d6;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .row { margin-bottom: 4px; }
+        .medal { margin-right: 4px; }
+        .score { color: #39d353; font-weight: bold; }
+        .me { color: #79c0ff; }
+    </style>
+</head>
+<body>
+    <div id="display">Connecting to cloud standings network...</div>
+
+    <script>
+        const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard.json";
+
+        function updateGlobalLeaderboard() {
+            // Pull the user identity safely from the parent window's DOM
+            let currentMe = "...";
+            try {
+                if(window.parent && window.parent.document.getElementById('userLabel')) {
+                    currentMe = window.parent.document.getElementById('userLabel').innerText.trim();
+                }
+            } catch(e) {}
+
+            fetch(FIREBASE_ENDPOINT)
+                .then(r => r.json())
+                .then(data => {
+                    const display = document.getElementById("display");
+                    if (!data) { display.innerText = "No verified registers synced yet."; return; }
+
+                    let list = [];
+                    Object.keys(data).forEach(k => {
+                        if (data[k] && typeof data[k].score === 'number') {
+                            list.push({ name: k, score: data[k].score });
+                        }
+                    });
+
+                    // Sort descending cleanly inside the sandbox environment
+                    list.sort((a, b) => b.score - a.score);
+
+                    let html = "";
+                    let rendered = 0;
+
+                    list.forEach(node => {
+                        if (rendered >= 3) return;
+                        if (node.name === "..." || node.name === "Anonymous_Miner") return;
+
+                        let medal = rendered === 0 ? "🥇" : rendered === 1 ? "🥈" : "🥉";
+                        let isMe = node.name === currentMe ? " <span class='me'>(You)</span>" : "";
+                        html += `<div class="row">${medal} <b>${node.name}</b>${isMe}: <span class="score">${node.score.toFixed(4)} M</span></div>`;
+                        rendered++;
+                    });
+
+                    display.innerHTML = html || "No verified registers synced yet.";
+                })
+                .catch(() => {
+                    document.getElementById("display").innerText = "Standings server connection delayed...";
+                });
+        }
+
+        // Run sandbox synchronization updates every 4 seconds completely independently
+        setInterval(updateGlobalLeaderboard, 4000);
+        updateGlobalLeaderboard();
+    </script>
+</body>
+</html>
