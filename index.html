@@ -102,7 +102,7 @@
 
     <script src="core.js"></script>
     <script>
-        // Stabilize cross-page parameters before the background module fires
+        // Cross-initialize market handle identifiers safely
         let savedMarketUser = localStorage.getItem('mcoin_market_username');
         if (savedMarketUser && savedMarketUser !== "Anonymous_Miner") {
             localStorage.setItem('mcoin_username', savedMarketUser);
@@ -196,35 +196,31 @@
         const db = getDatabase(app);
 
         window.broadcastBalanceToCloud = function() {
-            // Safe scoping evaluation fallback chain
-            let activeUser = "Anonymous_Miner";
-            if (typeof username !== 'undefined' && username !== "...") {
-                activeUser = username;
-            } else {
-                let localName = localStorage.getItem('mcoin_username');
-                if (localName && localName !== "...") activeUser = localName;
-            }
+            // Read active text strings straight from the visible interface layer
+            const userLabelEl = document.getElementById('userLabel');
+            const mainBalEl = document.getElementById('mainBal');
             
-            let activeBal = 0;
-            if (typeof currentBalance !== 'undefined' && !isNaN(parseFloat(currentBalance))) {
-                activeBal = parseFloat(currentBalance);
-            } else {
-                let localBal = localStorage.getItem('mcoin_balance');
-                if (localBal !== null && !isNaN(parseFloat(localBal))) activeBal = parseFloat(localBal);
-            }
-            
-            // Block uninitialized anomalies from hitting the cloud structure
-            if (activeUser && activeUser.trim() !== "" && activeUser !== "Anonymous_Miner" && activeUser !== "...") {
-                set(ref(db, `leaderboard/${activeUser}`), {
-                    score: parseFloat(activeBal.toFixed(4))
-                });
+            if (!userLabelEl || !mainBalEl) return;
+
+            let activeUser = userLabelEl.innerText.trim();
+            let activeBal = parseFloat(mainBalEl.innerText.trim());
+
+            // Validate strings and filter out uninitialized layout blocks
+            if (activeUser && activeUser !== "..." && activeUser !== "Anonymous_Miner" && !isNaN(activeBal)) {
+                // Ensure the username is safe for database paths
+                let sanitizedUser = activeUser.replace(/[^a-zA-Z0-9_]/g, "");
+                if (sanitizedUser.length >= 3) {
+                    set(ref(db, `leaderboard/${sanitizedUser}`), {
+                        score: parseFloat(activeBal.toFixed(4))
+                    });
+                }
             }
         };
 
-        // Synchronize state loops with 3-second heartbeat interval
-        setInterval(window.broadcastBalanceToCloud, 3000);
+        // Fire a 2-second fast heartbeat to snap updates quickly
+        setInterval(window.broadcastBalanceToCloud, 2000);
 
-        // Render sorted ranking structure
+        // Render sorted global standings arrays
         const leaderboardRef = ref(db, "leaderboard");
         onValue(leaderboardRef, (snapshot) => {
             const data = snapshot.val();
@@ -242,15 +238,13 @@
             });
             sortedList.sort((a, b) => b.score - a.score);
 
-            let activeUser = "Anonymous_Miner";
-            if (typeof username !== 'undefined') activeUser = username;
-            else activeUser = localStorage.getItem('mcoin_username') || "Anonymous_Miner";
+            const userLabelEl = document.getElementById('userLabel');
+            let currentActiveUser = userLabelEl ? userLabelEl.innerText.trim() : "...";
             
             let htmlOutput = "";
-            
             sortedList.slice(0, 3).forEach((node, idx) => {
                 let medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
-                let isMe = node.name === activeUser ? " <span style='color:#79c0ff;'>(You)</span>" : "";
+                let isMe = node.name === currentActiveUser ? " <span style='color:#79c0ff;'>(You)</span>" : "";
                 htmlOutput += `<div>${medal} <b>${node.name}</b>${isMe}: <span style="color:#39d353;">${node.score.toFixed(4)} M</span></div>`;
             });
 
