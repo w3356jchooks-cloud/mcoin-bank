@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mcoin P2P Open Market</title>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #30363d;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 { color: #58a6ff; margin: 0; }
+        .wallet-card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .wallet-amount { color: #39d353; }
+        
+        /* Layout Grid */
+        .market-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+        
+        /* Forms & Cards */
+        .panel {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            padding: 20px;
+            border-radius: 6px;
+            height: fit-content;
+        }
+        h2 { color: #f2c744; margin-top: 0; font-size: 18px; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #8b949e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+        button {
+            width: 100%;
+            background-color: #238636;
+            color: white;
+            border: 1px solid #2ea44f;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        button:hover { background-color: #2ea44f; }
+        
+        /* Order Book Listings */
+        .listings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .listings-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #30363d;
+            color: #8b949e;
+            font-size: 14px;
+        }
+        .listings-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #21262d;
+            font-size: 14px;
+        }
+        .buy-btn {
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            color: #58a6ff;
+            padding: 6px 12px;
+            width: auto;
+            border-radius: 4px;
+        }
+        .buy-btn:hover {
+            background-color: #58a6ff;
+            color: #0d1117;
+        }
+        .empty-msg {
+            color: #8b949e;
+            font-style: italic;
+            text-align: center;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>🛒 Mcoin P2P Market</h1>
+                <small style="color: #8b949e;">Decentralized Player-to-Player Asset Board</small>
+            </div>
+            <div class="wallet-card">
+                Your Balance: <span class="wallet-amount" id="balance-display">1000</span> 🪙 MC
+            </div>
+        </header>
+
+        <div class="market-grid">
+            <div class="panel">
+                <h2>📦 Host an Open Trade</h2>
+                <form id="trade-form" onsubmit="hostNewTrade(event)">
+                    <div class="form-group">
+                        <label>Your Username/Seller ID</label>
+                        <input type="text" id="seller-name" placeholder="e.g., Player_One" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Item / Asset Name</label>
+                        <input type="text" id="item-name" placeholder="e.g., Rare Scratch Sprite pack" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Asking Price (in Mcoin)</label>
+                        <input type="number" id="item-price" min="1" placeholder="e.g., 150" required>
+                    </div>
+                    <button type="submit">Deploy Listing to Market</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>⚖️ Active Global Trade Listings</h2>
+                <table class="listings-table">
+                    <thead>
+                        <tr>
+                            <th>Seller ID</th>
+                            <th>Item Asset</th>
+                            <th>Cost</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="market-listings">
+                        </tbody>
+                </table>
+                <div id="no-trades" class="empty-msg">No active trades currently hosted on the market grid.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check or set up a test user balance in local browser memory
+        let currentBalance = localStorage.getItem('mcoin_balance');
+        if (!currentBalance) {
+            currentBalance = 1000; // Gift starting coins for testing the shop loop
+            localStorage.setItem('mcoin_balance', currentBalance);
+        }
+        document.getElementById('balance-display').innerText = currentBalance;
+
+        // Load active marketplace listings from storage or create empty array
+        let activeTrades = JSON.parse(localStorage.getItem('mcoin_market_trades')) || [];
+
+        function renderMarketplace() {
+            const listingsContainer = document.getElementById('market-listings');
+            const noTradesMessage = document.getElementById('no-trades');
+            listingsContainer.innerHTML = '';
+
+            if (activeTrades.length === 0) {
+                noTradesMessage.style.display = 'block';
+                return;
+            } else {
+                noTradesMessage.style.display = 'none';
+            }
+
+            activeTrades.forEach((trade, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="color: #8b949e;">${escapeHTML(trade.seller)}</td>
+                    <td style="font-weight: bold; color: #c9d1d9;">${escapeHTML(trade.item)}</td>
+                    <td style="color: #39d353; font-weight: bold;">${trade.price} MC</td>
+                    <td><button class="buy-btn" onclick="executePurchase(${index})">BUY</button></td>
+                `;
+                listingsContainer.appendChild(row);
+            });
+        }
+
+        function hostNewTrade(event) {
+            event.preventDefault();
+            
+            const seller = document.getElementById('seller-name').value;
+            const item = document.getElementById('item-name').value;
+            const price = parseInt(document.getElementById('item-price').value);
+
+            // Create structural trade tracking object
+            const newTrade = { seller, item, price };
+            
+            activeTrades.push(newTrade);
+            localStorage.setItem('mcoin_market_trades', JSON.stringify(activeTrades));
+            
+            // Reset form UI input fields
+            document.getElementById('trade-form').reset();
+            renderMarketplace();
+        }
+
+        function executePurchase(tradeIndex) {
+            const selectedTrade = activeTrades[tradeIndex];
+            let balance = parseInt(localStorage.getItem('mcoin_balance'));
+
+            if (balance < selectedTrade.price) {
+                alert("❌ Transaction Failed: Insufficient Mcoin balance in your account module.");
+                return;
+            }
+
+            // Deduct funds from user balance
+            balance -= selectedTrade.price;
+            localStorage.setItem('mcoin_balance', balance);
+            document.getElementById('balance-display').innerText = balance;
+
+            alert(`🎉 Success! You purchased "${selectedTrade.item}" from ${selectedTrade.seller} for ${selectedTrade.price} Mcoin!`);
+
+            // Remove the listing from the order book board
+            activeTrades.splice(tradeIndex, 1);
+            localStorage.setItem('mcoin_market_trades', JSON.stringify(activeTrades));
+            renderMarketplace();
+        }
+
+        // Helper function to stop scripts or tags from breaking raw text rendering
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Initial render run when page fires open
+        renderMarketplace();
+    </script>
+</body>
+</html>
+
