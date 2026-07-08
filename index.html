@@ -5,21 +5,6 @@
     <title>Mcoin Hub Terminal</title><link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="publicLeaderboard" style="display:none !important; visibility:hidden !important;"></div>
-    <div id="firebaseLeaderboard" style="display:none !important; visibility:hidden !important;"></div>
-
-    <script>
-        // STEALTH INTERCEPTOR: Hijack DOM lookups before core.js can touch them
-        const nativeGetElementById = document.getElementById;
-        document.getElementById = function(id) {
-            if (id === "publicLeaderboard" || id === "firebaseLeaderboard") {
-                // Force return of our hidden decoy element
-                return nativeGetElementById.call(document, "publicLeaderboard");
-            }
-            return nativeGetElementById.call(document, id);
-        };
-    </script>
-
     <div id="maintBlock" style="display:none;" class="card"><h2 style="color:#f7768e;">⚙️ SERVER MAINTENANCE MODE ACTIVE</h2><p id="maintCtx" style="text-align:center; font-family:monospace;"></p></div>
 
     <div id="appContainer">
@@ -58,8 +43,8 @@
 
         <div class="card" style="border-color:#bb9af7;">
             <h3>📊 Live Global Standings (Top 3 Nodes)</h3>
-            <div id="trueCloudLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; min-height:60px;">
-                Establishing connection to global cloud array...
+            <div id="publicLeaderboard" style="font-size:13px; font-family:monospace; line-height:1.6; min-height:60px;">
+                Connecting to cloud database...
             </div>
         </div>
 
@@ -123,8 +108,8 @@
         const FIREBASE_ENDPOINT = "https://mcoin-bank-market-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard";
 
         function sendSnapshotToCloud() {
-            const userEl = nativeGetElementById.call(document, 'userLabel');
-            const balEl = nativeGetElementById.call(document, 'mainBal');
+            const userEl = document.getElementById('userLabel');
+            const balEl = document.getElementById('mainBal');
             if (!userEl || !balEl) return;
 
             let u = userEl.innerText.trim();
@@ -146,8 +131,7 @@
             fetch(`${FIREBASE_ENDPOINT}.json`)
                 .then(r => r.json())
                 .then(data => {
-                    // Bypass lookup filter to render specifically to our secure target
-                    const display = nativeGetElementById.call(document, "trueCloudLeaderboard");
+                    const display = document.getElementById("publicLeaderboard");
                     if (!display || !data) return;
 
                     let list = [];
@@ -159,7 +143,7 @@
 
                     list.sort((a, b) => b.score - a.score);
 
-                    const userEl = nativeGetElementById.call(document, 'userLabel');
+                    const userEl = document.getElementById('userLabel');
                     let activeMe = userEl ? userEl.innerText.trim() : "...";
                     let html = "";
                     let rendered = 0;
@@ -174,7 +158,7 @@
                         rendered++;
                     });
 
-                    display.innerHTML = html || "No verified registers synced yet.";
+                    if (html) display.innerHTML = html;
                 })
                 .catch(() => {});
         }
@@ -192,10 +176,9 @@
             setTimeout(sendSnapshotToCloud, 400);
         }
 
-        // Run sync loops completely isolated
         setInterval(sendSnapshotToCloud, 6000);
-        setInterval(pullGlobalStandings, 2000);
-        setTimeout(pullGlobalStandings, 400);
+        setInterval(pullGlobalStandings, 3000);
+        setTimeout(pullGlobalStandings, 500);
     </script>
 </body>
 </html>

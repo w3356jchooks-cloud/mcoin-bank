@@ -130,7 +130,6 @@ function evaluateRankProgressAndBadges() {
             if (!displayBlock) return;
 
             if (!data) {
-                displayBlock.innerText = "No verified registers synced yet.";
                 return;
             }
 
@@ -158,7 +157,6 @@ function evaluateRankProgressAndBadges() {
                 itemsRendered++;
             });
 
-            displayBlock.innerHTML = htmlOutput || "No verified registers synced yet.";
         })
         .catch(error => {
             if (displayBlock) displayBlock.innerText = "Standings server restricted (Local Sandbox Mode)";
