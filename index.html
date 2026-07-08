@@ -102,7 +102,7 @@
 
     <script src="core.js"></script>
     <script>
-        // Make sure local username storage links smoothly with your market profile configuration
+        // Stabilize cross-page parameters before the background module fires
         let savedMarketUser = localStorage.getItem('mcoin_market_username');
         if (savedMarketUser && savedMarketUser !== "Anonymous_Miner") {
             localStorage.setItem('mcoin_username', savedMarketUser);
@@ -113,7 +113,7 @@
             if(v.length < 3) return alert("Username restriction rule: Minimum 3 alphanumeric characters.");
             username = v; 
             localStorage.setItem("mcoin_username", username);
-            localStorage.setItem("mcoin_market_username", username); // Align cross-page validation
+            localStorage.setItem("mcoin_market_username", username); 
             syncMainframeView();
             if (window.broadcastBalanceToCloud) window.broadcastBalanceToCloud();
             appendTxHistory(`Changed device identity handle to "${username}"`);
@@ -196,21 +196,35 @@
         const db = getDatabase(app);
 
         window.broadcastBalanceToCloud = function() {
-            let activeUser = localStorage.getItem('mcoin_username') || username;
-            let rawBal = localStorage.getItem('mcoin_balance');
-            let currentBal = (rawBal !== null && !isNaN(parseFloat(rawBal))) ? parseFloat(rawBal) : 0;
+            // Safe scoping evaluation fallback chain
+            let activeUser = "Anonymous_Miner";
+            if (typeof username !== 'undefined' && username !== "...") {
+                activeUser = username;
+            } else {
+                let localName = localStorage.getItem('mcoin_username');
+                if (localName && localName !== "...") activeUser = localName;
+            }
             
+            let activeBal = 0;
+            if (typeof currentBalance !== 'undefined' && !isNaN(parseFloat(currentBalance))) {
+                activeBal = parseFloat(currentBalance);
+            } else {
+                let localBal = localStorage.getItem('mcoin_balance');
+                if (localBal !== null && !isNaN(parseFloat(localBal))) activeBal = parseFloat(localBal);
+            }
+            
+            // Block uninitialized anomalies from hitting the cloud structure
             if (activeUser && activeUser.trim() !== "" && activeUser !== "Anonymous_Miner" && activeUser !== "...") {
                 set(ref(db, `leaderboard/${activeUser}`), {
-                    score: parseFloat(currentBal.toFixed(4))
+                    score: parseFloat(activeBal.toFixed(4))
                 });
             }
         };
 
-        // Automatically push balance modifications to the database periodically
+        // Synchronize state loops with 3-second heartbeat interval
         setInterval(window.broadcastBalanceToCloud, 3000);
 
-        // Track and sort the top nodes for your ledger panel
+        // Render sorted ranking structure
         const leaderboardRef = ref(db, "leaderboard");
         onValue(leaderboardRef, (snapshot) => {
             const data = snapshot.val();
@@ -228,10 +242,12 @@
             });
             sortedList.sort((a, b) => b.score - a.score);
 
-            let activeUser = localStorage.getItem('mcoin_username') || username;
+            let activeUser = "Anonymous_Miner";
+            if (typeof username !== 'undefined') activeUser = username;
+            else activeUser = localStorage.getItem('mcoin_username') || "Anonymous_Miner";
+            
             let htmlOutput = "";
             
-            // Slice to top 3 global nodes
             sortedList.slice(0, 3).forEach((node, idx) => {
                 let medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
                 let isMe = node.name === activeUser ? " <span style='color:#79c0ff;'>(You)</span>" : "";
