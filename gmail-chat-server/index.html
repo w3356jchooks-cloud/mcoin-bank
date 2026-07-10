@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GmailChat - Group Edition</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: #dadbd3; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .app-container { display: flex; width: 100%; height: 100vh; background: #f0f2f5; }
+        
+        /* Sidebar Styles */
+        .sidebar { width: 35%; border-right: 1px solid #e9edef; background: #fff; display: flex; flex-direction: column; padding: 15px; gap: 10px; }
+        .connection-box { background: #f0f2f5; padding: 12px; border-radius: 8px; font-size: 14px; }
+        .connection-box input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { width: 100%; padding: 10px; background: #00a884; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        
+        /* Chat Window Styles */
+        .chat-window { width: 65%; display: flex; flex-direction: column; background: #efeae2; position: relative; }
+        .chat-header { background: #f0f2f5; padding: 15px; font-weight: bold; border-bottom: 1px solid #e9edef; }
+        .message-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 60%; padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+        .message.sent { background: #d9fdd3; align-self: flex-end; }
+        .message.received { background: #fff; align-self: flex-start; }
+        
+        /* Input Area */
+        .input-area { background: #f0f2f5; padding: 10px; display: flex; gap: 10px; }
+        .input-area input { flex: 1; padding: 10px; border: none; border-radius: 8px; outline: none; }
+    </style>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="sidebar">
+            <h2>GmailChat Group</h2>
+            
+            <div class="connection-box">
+                <strong>Step 1: Your Info</strong>
+                <input type="text" id="myGmail" placeholder="Enter your Gmail address">
+                <button class="btn" onclick="initPeer()">Activate My Chat</button>
+            </div>
+
+            <div class="connection-box" id="idDisplay" style="display:none;">
+                <strong>Your Connection ID:</strong>
+                <p id="myIdText" style="color:#00a884; font-weight:bold; word-break:break-all; margin-top:5px;"></p>
+                <small style="color:#667781;">Give this ID to ALL your friends!</small>
+            </div>
+
+            <div class="connection-box">
+                <strong>Step 2: Connect to Friend</strong>
+                <input type="text" id="friendIdInput" placeholder="Paste group host ID">
+                <button class="btn" style="background:#53bdeb;" onclick="connectToFriend()">Join Group</button>
+            </div>
+            
+            <p id="status" style="font-size:12px; color:gray; text-align:center;">Status: Disconnected</p>
+        </div>
+
+        <div class="chat-window">
+            <div class="chat-header" id="chatHeader">No Active Group</div>
+            <div class="message-area" id="messageArea"></div>
+            <div class="input-area">
+                <input type="text" id="msgInput" placeholder="Type a message..." onkeypress="checkEnter(event)">
+                <button class="btn" style="width:auto; margin:0; padding:0 20px;" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let peer = null;
+        let connections = []; 
+        let myUsername = "Anonymous";
+
+        function initPeer() {
+            const gmail = document.getElementById("myGmail").value.trim();
+            if (!gmail) return alert("Please enter your Gmail first!");
+            
+            myUsername = gmail;
+            peer = new Peer();
+
+            peer.on('open', (id) => {
+                document.getElementById("idDisplay").style.display = "block";
+                document.getElementById("myIdText").innerText = id;
+                document.getElementById("status").innerText = "Status: Waiting for friends to join...";
+            });
+
+            // Accept multiple different connections at once
+            peer.on('connection', (incomingConn) => {
+                setupConnection(incomingConn);
+            });
+        }
+
+        function connectToFriend() {
+            const friendId = document.getElementById("friendIdInput").value.trim();
+            if (!friendId) return alert("Please paste a Connection ID!");
+            if (!peer) return alert("Activate your chat first!");
+
+            document.getElementById("status").innerText = "Status: Connecting...";
+            const newConn = peer.connect(friendId);
+            setupConnection(newConn);
+        }
+
+        function setupConnection(conn) {
+            conn.on('open', () => {
+                connections.push(conn);
+                document.getElementById("status").innerText = `Status: Connected to ${connections.length} devices!`;
+                document.getElementById("chatHeader").innerText = "Global Group Room Active";
+            });
+
+            conn.on('data', (data) => {
+                renderBubble(data.sender, data.text, false);
+            });
+            
+            conn.on('close', () => {
+                connections = connections.filter(c => c.peer !== conn.peer);
+                document.getElementById("status").innerText = `Status: Connected to ${connections.length} devices.`;
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("msgInput");
+            const text = input.value.trim();
+            if (!text) return;
+
+            const payload = { sender: myUsername, text: text };
+            
+            // Loop and broadcast to everyone on our list
+            connections.forEach(conn => {
+                if (conn.open) {
+                    conn.send(payload);
+                }
+            });
+            
+            renderBubble(myUsername, text, true);
+            input.value = "";
+        }
+
+        function renderBubble(sender, text, isMe) {
+            const area = document.getElementById("messageArea");
+            const bubble = document.createElement("div");
+            bubble.className = `message ${isMe ? 'sent' : 'received'}`;
+            bubble.innerHTML = `
+                <div style="font-size:11px; font-weight:bold; color:#00a884; margin-bottom:2px;">${sender}</div>
+                <div>${text}</div>
+            `;
+            area.appendChild(bubble);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function checkEnter(e) {
+            if (e.key === "Enter") sendMessage();
+        }
+    </script>
+</body>
+</html>
